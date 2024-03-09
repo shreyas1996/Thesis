@@ -95,6 +95,7 @@ simpleExpr:
     | primary parenExprCommaSeq { mkNode(parseState, 1, Expr.Application($1, $2)) }
     | LCURLY setExprs RCURLY { mkNode(parseState, 2, Expr.SetDef($2)) }
     | simpleExpr UNION simpleExpr { mkNode(parseState, 2, Expr.UnionDef($1, $3)) }
+    | variable COLON functionExpr bodyExpr { mkNode(parseState, 2, Expr.Assign($1, $3, $4)) }
     | variable COLON pretype bodyExpr { mkNode(parseState, 2, Expr.Assign($1, $3, $4)) }
     | primary { $1 }
     // | simpleExpr PRODUCT simpleExpr { mkNode(parseState, 2, Expr.Product($1, $3)) }
@@ -109,6 +110,7 @@ setExpr:
 
 bodyExpr:
     | simpleExpr IS simpleExpr { mkNode(parseState, 1, Expr.IsEqual($1, $3)) }
+    | EQUALS simpleExpr { $2 }
     | simpleExpr { $1 }
 
 // Possibly empty equence of comma-separated expressions, between parentheses
@@ -125,10 +127,12 @@ exprCommaSeq:
 parenArgProductSeq:
     | LPAREN RPAREN { [] }
     | LPAREN argTypesSeq RPAREN { $2 }
+    // | pretype PRODUCT pretype { $1 :: [$3]}
+    | argTypesSeq { $1 }
 
 argTypesSeq:
-    | pretype PRODUCT argTypesSeq  { $1 :: $3 }
     | pretype                    { [$1] }
+    | pretype PRODUCT argTypesSeq  { $1 :: $3 }
 
 functionExpr:
     | parenArgProductSeq RARROW pretype { mkPretypeNode(parseState, 2, Pretype.TFun($1, $3)) }
@@ -152,6 +156,6 @@ ident:
     | IDENT { $1 }
  
 pretype:
-    | functionExpr { $1 }
+    // | functionExpr { $1 }
     | ident { mkPretypeNode(parseState, 1, Pretype.TId($1)) }
     | pretype MINUS SET { mkPretypeNode(parseState, 3, Pretype.TSet($1)) }

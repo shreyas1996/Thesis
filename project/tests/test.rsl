@@ -3,6 +3,7 @@ scheme SET_DATABASE =
     type
       Database = Person-set,  Person = Text
     value
-      register : (Person >< Database) -> Database
-      register(p, db) is db union {p}
+      register : Person >< Database -> Database
+      register(p, db) is db union {p},
+      name : Person = "John"
   end        

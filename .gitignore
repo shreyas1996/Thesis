@@ -1,5 +1,25 @@
 # *.sml
 *.el
 *.deb
-*.DS_Store
+*/bin
+*Lexer.fs
+*Parser.fsi
+*Parser.fs
 
+*lib/debug
+*lib/release
+*Debug
+*.suo
+*.user
+*/obj
+*/build/
+*.exe
+!.paket/paket.bootstrapper.exe
+*.ionide/
+*TestResults
+
+*.fake
+*.vscode
+
+*.DS_Store
+.idea
