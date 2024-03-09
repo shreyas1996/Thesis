@@ -44,6 +44,12 @@ let rec internal formatASTRec (node: UntypedAST): Tree =
         | FloatVal(value) -> Node("FloatVal", [("", Node(string value, []))])
         | StringVal(value) -> Node("StringVal", [("", Node(value, []))])
         | Var(name) -> Node("Var", [("", Node(name, []))])
+        | ValList(exprs) ->
+            let exprNodes = List.map (fun (node: UntypedAST) -> ("", formatASTRec node)) exprs
+            Node("ValList", [("Exprs", Node("", exprNodes))])
+        | Add(expr1, expr2) -> Node("Add", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
+        | Sub(expr1, expr2) -> Node("Sub", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
+        | Exponent(expr1, expr2) -> Node("Exponent", [("Base", formatASTRec expr1); ("Power", formatASTRec expr2)])
         | TP(expr) -> 
             // let tpExprs = List.map (fun (node: UntypedAST) -> ("", formatASTRec node)) expr
             Node("TP", [("", formatASTRec expr)])
@@ -70,6 +76,9 @@ let rec internal formatASTRec (node: UntypedAST): Tree =
                 List.map (fun (i, n) -> ($"arg %d{i+1}", formatASTRec n))
                         (List.indexed args)
             Node("Application", [("Expr",formatASTRec expr); ("Args", Node("", argChildren))] )
+        | Tuple(exprs) ->
+            let exprNodes = List.map (fun (node: UntypedAST) -> ("", formatASTRec node)) exprs
+            Node("Tuple", [("Args", Node("", exprNodes))])
         | Assign(name, tpe, body) -> Node("Assign", [("Name", Node(name, [])); ("Pretype", formatPretypeNode tpe); ("Body", formatASTRec body)])
         | TestCase(name, expr) -> Node("TestCase", [("Name", Node(name, [])); ("Expr", formatASTRec expr)])
         | Scheme(name, exprs) ->
@@ -84,8 +93,14 @@ and internal formatPretypeNode (node: PretypeNode): Tree =
     match node.Pretype with
     | Pretype.TId(id) ->
         Node((formatPretypeDescr node $"Pretype Id \"%s{id}\""), [])
-    | TText(text) -> Node("Text", [("", Node(text, []))])
-    | TSet(elementType) -> Node("Set", [("", formatPretypeNode elementType)])
+    | Pretype.TText(text) -> Node("Text", [("", Node(text, []))])
+    | Pretype.TSet(elementType) -> Node("Set", [("", formatPretypeNode elementType)])
+    | Pretype.TProduct(elementType) ->
+        let nodeArgs =
+            List.map (fun (i, t) -> ((formatPretypeDescr t $"Type %d{i+1}"),
+                                     formatPretypeNode t))
+                     (List.indexed elementType)
+        Node((formatPretypeDescr node "Product pretype"),nodeArgs)
     | Pretype.TFun(args, ret) ->
         /// Formatted argument pretypes with their respective position
         let argChildren =
@@ -106,4 +121,7 @@ and internal formatNodeTypingInfo (node: UntypedAST): List<string * Tree> =
 
 /// Return a compact but readable representation of the AST.
 let prettyPrintAST (node: UntypedAST): string =
-    (formatASTRec node).ToString()
+    let output = (formatASTRec node).ToString()
+    let uniqueId = System.Guid.NewGuid().ToString()
+    System.IO.File.WriteAllText($"outputs/AST_{uniqueId}.txt", output)
+    output

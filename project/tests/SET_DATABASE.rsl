@@ -4,5 +4,5 @@ scheme SET_DATABASE =
       Database = Person-set,  Person = Text
     value
       register : Person >< Database -> Database
-      register(p, db) IS db union {p}
+      register(p, db) is db union {p}
   end        

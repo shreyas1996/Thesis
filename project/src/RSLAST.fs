@@ -34,6 +34,7 @@ and Pretype =
     | TId of id: string
     | TText of string
     | TSet of elementType: PretypeNode
+    | TProduct of elementType: List<PretypeNode>
     /// A function pretype, with argument pretypes and return pretype.
     | TFun of args: List<PretypeNode>
         * ret: PretypeNode
@@ -68,6 +69,10 @@ and Expr<'E,'T> =
 
     /// Variable name.
     | Var of name: string
+
+    // Value List
+
+    | ValList of List<Node<'E, 'T>>
     
     // | TSet of Node<'E, 'T>
     | TypeDef of string 
@@ -86,6 +91,18 @@ and Expr<'E,'T> =
 
     | UnionDef of Node<'E, 'T> 
         * Node<'E, 'T>
+    
+    | Add of 
+        lhs: Node<'E, 'T> 
+        * rhs: Node<'E, 'T>
+    
+    | Sub of 
+        lhs: Node<'E, 'T> 
+        * rhs: Node<'E, 'T>
+
+    | Exponent of 
+        lhs: Node<'E, 'T> 
+        * rhs: Node<'E, 'T>
 
     | TP of Node<'E, 'T>
     | Yenda of List<PretypeNode>
@@ -102,6 +119,7 @@ and Expr<'E,'T> =
     //     * scope: Node<'E,'T>
     | Application of expr: Node<'E,'T>
         * args: List<Node<'E,'T>>
+    | Tuple of args: List<Node<'E,'T>>
 
     | IsEqual of 
         lhs: Node<'E,'T>

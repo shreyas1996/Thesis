@@ -22,7 +22,8 @@ let newline    = '\n'
 let litUnit    = "()"
 let litBool    = "true" | "false"
 let litInt     = digit+
-let litFloat   = digit+ '.' digit+ (('e'|'E') ('+'|'-')? digit+)? 'f'
+// let litFloat   = digit+ '.' digit+ (('e'|'E') ('+'|'-')? digit+)? 'f'
+let litFloat = ['-']?digit+['.']digit+ 
 let stringLit = '"' ('\\' ['\\' '"'] | [^'"'])* '"'
 
 rule tokenize = parse
@@ -34,7 +35,8 @@ rule tokenize = parse
 | litUnit           { Parser.LIT_UNIT() }
 | litBool           { Parser.LIT_BOOL((LexBuffer<_>.LexemeString lexbuf) = "true") }
 | litInt            { Parser.LIT_INT(int (LexBuffer<_>.LexemeString lexbuf)) }
-| litFloat          { Parser.LIT_FLOAT(single ((LexBuffer<_>.LexemeString lexbuf).Split [|'f'|]).[0]) }
+// | litFloat          { Parser.LIT_FLOAT(single ((LexBuffer<_>.LexemeString lexbuf).Split [|'f'|]).[0]) }
+| litFloat          { Parser.LIT_FLOAT(single (LexBuffer<_>.LexemeString lexbuf)) }
 | stringLit         { Parser.STRING_LITERAL (LexBuffer<_>.LexemeString lexbuf) }
 
 | "scheme"          { Parser.SCHEME }
@@ -52,6 +54,10 @@ rule tokenize = parse
 | "><"              { Parser.PRODUCT }
 | "->"              { Parser.RARROW }
 | "-"               { Parser.MINUS }
+| "+"               { Parser.PLUS }
+// | "*"               { Parser.TIMES }
+// | "/"               { Parser.DIVIDE }
+| "**"              { Parser.EXPONENT }
 | "="               { Parser.EQUALS }
 | ":"               { Parser.COLON }
 | ";"               { Parser.SEMICOLON }

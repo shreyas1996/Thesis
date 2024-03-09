@@ -1,9 +1,13 @@
 scheme SET_DATABASE =
   class
     type
-      Database = Person-set,  Person = Text
+      Database = Person-set,  Person = Text, Position = Real >< Real
     value
+      origin : Position = (0.02,0.3),
       register : Person >< Database -> Database
       register(p, db) is db union {p},
-      name : Person = "John"
+      name : Person = "John",
+      distance : Position >< Position -> Real
+      distance((x1,y1),(x2,y2)) is 
+        ((x2-x1)**2.0 + (y2-y1)**2.0)**0.5
   end        
