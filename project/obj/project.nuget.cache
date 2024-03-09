@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "O6MuDYaE4TorrjvAgDTgin1BRL6f9cxEUcyhhi1PS9i8l6I+durmAl7vqFfxwvQD7L2TjyRIpdJEYnrNnCNXPQ==",
+  "success": true,
+  "projectFilePath": "/Users/shreyas/Documents/DTU/Thesis/project/project.fsproj",
+  "expectedPackageFiles": [
+    "/Users/shreyas/.nuget/packages/commandlineparser/2.9.1/commandlineparser.2.9.1.nupkg.sha512",
+    "/Users/shreyas/.nuget/packages/commandlineparser.fsharp/2.9.1/commandlineparser.fsharp.2.9.1.nupkg.sha512",
+    "/Users/shreyas/.nuget/packages/fsharp.core/6.0.1/fsharp.core.6.0.1.nupkg.sha512",
+    "/Users/shreyas/.nuget/packages/fslexyacc/11.2.0/fslexyacc.11.2.0.nupkg.sha512",
+    "/Users/shreyas/.nuget/packages/fslexyacc.runtime/11.2.0/fslexyacc.runtime.11.2.0.nupkg.sha512"
+  ],
+  "logs": []
+}

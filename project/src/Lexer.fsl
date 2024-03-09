@@ -1,0 +1,69 @@
+{
+// open FsLexYacc.Runtime
+// The lexer's input buffer type (just a shorthand type alias used below).
+type LexBuffer<'a> = FSharp.Text.Lexing.LexBuffer<'a>
+
+// Auxiliary function to update the token stream position to the next line.
+let skipline (lexbuf: LexBuffer<_>) =
+  // Compute the next line position
+  let newPos = lexbuf.EndPos.NextLine
+  // Update the token stream position, marking the beginning of line position
+  // (pos_bol) at the current total number of scanned characters (pos_cnum)
+  lexbuf.EndPos <- { newPos with pos_bol = newPos.pos_cnum }
+
+}
+
+let digit = ['0'-'9']
+let letter = ['a'-'z' 'A'-'Z']
+let ident = letter (letter | digit | '_')*
+let whitespace = [' ' '\t' '\r']
+let newline    = '\n'
+
+let litUnit    = "()"
+let litBool    = "true" | "false"
+let litInt     = digit+
+let litFloat   = digit+ '.' digit+ (('e'|'E') ('+'|'-')? digit+)? 'f'
+let stringLit = '"' ('\\' ['\\' '"'] | [^'"'])* '"'
+
+rule tokenize = parse
+
+| whitespace        { tokenize lexbuf }
+| newline           { skipline lexbuf; tokenize lexbuf }
+| "//" [^'\n''\r']* { tokenize lexbuf }
+
+| litUnit           { Parser.LIT_UNIT() }
+| litBool           { Parser.LIT_BOOL((LexBuffer<_>.LexemeString lexbuf) = "true") }
+| litInt            { Parser.LIT_INT(int (LexBuffer<_>.LexemeString lexbuf)) }
+| litFloat          { Parser.LIT_FLOAT(single ((LexBuffer<_>.LexemeString lexbuf).Split [|'f'|]).[0]) }
+| stringLit         { Parser.STRING_LITERAL (LexBuffer<_>.LexemeString lexbuf) }
+
+| "scheme"          { Parser.SCHEME }
+| "class"           { Parser.CLASS }
+| "type"            { Parser.TYPE }
+| "value"           { Parser.VALUE }
+| "test_case"       { Parser.TEST_CASE }
+| "end"             { Parser.END }
+// | "Text"            { Parser.TEXT }
+| "set"             { Parser.SET }
+| "is"              { Parser.IS }
+| "union"           { Parser.UNION }
+| ">"               { Parser.GT }
+| "<"               { Parser.LT }
+| "><"              { Parser.PRODUCT }
+| "->"              { Parser.RARROW }
+| "-"               { Parser.MINUS }
+| "="               { Parser.EQUALS }
+| ":"               { Parser.COLON }
+| ";"               { Parser.SEMICOLON }
+| ","               { Parser.COMMA }
+| "("               { Parser.LPAREN }
+| ")"               { Parser.RPAREN }
+| "{"               { Parser.LCURLY }
+| "}"               { Parser.RCURLY }
+| "["               { Parser.LBRACK }
+| "]"               { Parser.RBRACK }
+
+
+| ident             { Parser.IDENT (LexBuffer<_>.LexemeString lexbuf) }
+
+| eof               { Parser.EOF }

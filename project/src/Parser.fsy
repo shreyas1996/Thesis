@@ -1,0 +1,157 @@
+%{
+open FSharp.Text.Parsing
+open AST
+
+// Auxiliary function to compute the position an AST node
+let pos (parseState: IParseState, inputIdx: int): AST.Position =
+  let mainPos = parseState.InputStartPosition inputIdx
+  let (rstart, rend) = parseState.ResultRange
+  { FileName = mainPos.FileName
+    Line = mainPos.pos_lnum + 1 // Line numbering from 1
+    Col = mainPos.pos_cnum - mainPos.pos_bol + 1 // Line numbering from 1
+    LineStart = rstart.pos_lnum + 1 // Row numbering from 1
+    ColStart = rstart.pos_cnum - rstart.pos_bol + 1 // Column numbering from 1
+    LineEnd = rend.pos_lnum + 1
+    ColEnd = rend.pos_cnum - rend.pos_bol } // No +1: cover last-used character
+
+// Auxiliary function to build an Abstract Syntax Tree node for a Hygge pretype.
+// 'inputIdx' is the index of the symbol to use for computing the position of
+// this expression (it will be used e.g. when reporting error messages).
+let mkPretypeNode (parseState: IParseState, inputIdx: int, t: Pretype): PretypeNode =
+  { Pos = pos(parseState, inputIdx); Pretype = t }
+
+// Auxiliary function to build an untyped AST node for a Hygge expression.
+// 'inputIdx' is the index of the symbol to use for computing the position of
+// this expression (it will be used e.g. when reporting error messages).
+let mkNode (parseState: IParseState, inputIdx: int, e: UntypedExpr): UntypedAST =
+  { Pos = pos(parseState, inputIdx); Env = (); Type = (); Expr = e }
+
+// let mkSimpleType name pos = TSimple(name, pos)
+// let mkSetType baseType pos = TSet(baseType, pos)
+%}
+
+%start program
+%type <AST.UntypedAST> program
+// Define constants
+%token <bool> LIT_BOOL
+%token <int> LIT_INT
+%token <single> LIT_FLOAT
+%token <unit> LIT_UNIT
+%token <string> STRING_LITERAL
+
+%token <string> IDENT
+
+%token SCHEME CLASS TYPE VALUE TEST_CASE END COLON EQUALS 
+%token SEMICOLON COMMA LPAREN RPAREN LBRACK RBRACK LCURLY RCURLY EOF
+%token SET MINUS RARROW IS UNION PRODUCT
+%token GT LT
+
+%%
+
+program:
+    // | parenArgProductSeq EOF { mkNode(parseState, 1, Expr.Yenda($1)) }
+    // | functionExpr EOF { mkNode(parseState, 1, Expr.Yenda2($1)) }
+    | SCHEME scheme EOF { $2 }
+
+scheme:
+    | ident EQUALS classes { mkNode(parseState, 2, Expr.Scheme($1, $3)) }
+    // | classDef {mkNode(parseState, 1, Expr.TP($1))}
+
+classes:
+    | CLASS classDef END classes { $2 :: $4 }
+    | CLASS classDef END { [$2] }
+
+classDef:
+    // | typeDefs { mkNode(parseState, 1, Expr.TP($1)) }
+    // | valueDefs { mkNode(parseState, 1, Expr.TP($1)) }
+    | typeDefs valueDefs { mkNode(parseState, 1, Expr.ClassDef("", $1, $2)) }
+    | valueDefs typeDefs { mkNode(parseState, 1, Expr.ClassDef("", $2, $1)) }
+
+typeDefs:
+    | TYPE typeDefList { $2 }
+    
+typeDefList:
+    | typeDef COMMA typeDefList { $1 :: $3 }
+    | typeDef { [$1] }
+
+typeDef:
+    | variable EQUALS pretype { mkNode(parseState, 2, (Expr.TypeDef($1, $3))) }
+
+valueDefs:
+    | VALUE valueDefList { $2 }
+
+valueDefList:
+    | valueDef COMMA valueDefList { $1 :: $3 }
+    | valueDef { [$1] }
+
+valueDef:
+    | simpleExpr { mkNode(parseState, 1, Expr.ValueDef($1)) }
+
+// testCase:
+//     | /* Empty */ { [] }
+//     | TEST_CASE ident LPAREN value RPAREN { mkNode(parseState, 1, Expr.TestCase($2, $4)) }
+
+simpleExpr:
+    | primary parenExprCommaSeq { mkNode(parseState, 1, Expr.Application($1, $2)) }
+    | LCURLY setExprs RCURLY { mkNode(parseState, 2, Expr.SetDef($2)) }
+    | simpleExpr UNION simpleExpr { mkNode(parseState, 2, Expr.UnionDef($1, $3)) }
+    | variable COLON pretype bodyExpr { mkNode(parseState, 2, Expr.Assign($1, $3, $4)) }
+    | primary { $1 }
+    // | simpleExpr PRODUCT simpleExpr { mkNode(parseState, 2, Expr.Product($1, $3)) }
+    // | variable LPAREN variable COMMA variable RPAREN IS variable UNION variable 
+
+setExprs:
+    | setExpr COMMA setExprs { $1 :: $3 }
+    | setExpr { [$1] }
+
+setExpr:
+    | primary { $1 }
+
+bodyExpr:
+    | simpleExpr IS simpleExpr { mkNode(parseState, 1, Expr.IsEqual($1, $3)) }
+    | simpleExpr { $1 }
+
+// Possibly empty equence of comma-separated expressions, between parentheses
+parenExprCommaSeq:
+  | LPAREN RPAREN              { [] }
+  | LIT_UNIT                { [] } // Needed because token LIT_UNIT matches "()"
+  | LPAREN exprCommaSeq RPAREN  { $2 }
+
+// Non-empty sequence of comma-separated expressions
+exprCommaSeq:
+  | simpleExpr COMMA exprCommaSeq  { $1 :: $3 }
+  | simpleExpr                     { [$1] }
+
+parenArgProductSeq:
+    | LPAREN RPAREN { [] }
+    | LPAREN argTypesSeq RPAREN { $2 }
+
+argTypesSeq:
+    | pretype PRODUCT argTypesSeq  { $1 :: $3 }
+    | pretype                    { [$1] }
+
+functionExpr:
+    | parenArgProductSeq RARROW pretype { mkPretypeNode(parseState, 2, Pretype.TFun($1, $3)) }
+
+primary:
+    | value       { $1 }
+    | variable    { mkNode(parseState, 1, Expr.Var($1)) }
+// Variable name
+variable:
+  | ident       { $1 }
+
+// Literal constants
+value:
+  | LIT_BOOL    { mkNode(parseState, 1, Expr.BoolVal($1)) }
+  | LIT_INT     { mkNode(parseState, 1, Expr.IntVal($1)) }
+  | LIT_FLOAT   { mkNode(parseState, 1, Expr.FloatVal($1)) }
+  | STRING_LITERAL  { mkNode(parseState, 1, Expr.StringVal($1.[1..^1])) } // Trim quotes around string
+  | LIT_UNIT    { mkNode(parseState, 1, Expr.UnitVal) }
+
+ident:
+    | IDENT { $1 }
+ 
+pretype:
+    | functionExpr { $1 }
+    | ident { mkPretypeNode(parseState, 1, Pretype.TId($1)) }
+    | pretype MINUS SET { mkPretypeNode(parseState, 3, Pretype.TSet($1)) }
