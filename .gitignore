@@ -1,0 +1,5 @@
+# *.sml
+*.el
+*.deb
+*.DS_Store
+

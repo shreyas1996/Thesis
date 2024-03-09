@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  rsl:
+    image: thesis/rsl:latest
+    build: 
+      context: .
+    command: tail -F /dev/null
+    volumes:
+      - .:/usr/src
