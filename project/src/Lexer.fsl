@@ -47,6 +47,7 @@ rule tokenize = parse
 | "end"             { Parser.END }
 // | "Text"            { Parser.TEXT }
 | "set"             { Parser.SET }
+| "infset"             { Parser.INFSET }
 | "is"              { Parser.IS }
 | "union"           { Parser.UNION }
 | ">"               { Parser.GT }
@@ -55,8 +56,8 @@ rule tokenize = parse
 | "->"              { Parser.RARROW }
 | "-"               { Parser.MINUS }
 | "+"               { Parser.PLUS }
-// | "*"               { Parser.TIMES }
-// | "/"               { Parser.DIVIDE }
+| "*"               { Parser.MULTIPLY }
+| "/"               { Parser.DIVIDE }
 | "**"              { Parser.EXPONENT }
 | "="               { Parser.EQUALS }
 | ":"               { Parser.COLON }

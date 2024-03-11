@@ -33,7 +33,7 @@ type PretypeNode = {
 and Pretype =
     | TId of id: string
     | TText of string
-    | TSet of elementType: PretypeNode
+    | TSet of elementType: PretypeNode * isInf: bool
     | TProduct of elementType: List<PretypeNode>
     /// A function pretype, with argument pretypes and return pretype.
     | TFun of args: List<PretypeNode>
@@ -99,6 +99,14 @@ and Expr<'E,'T> =
     | Sub of 
         lhs: Node<'E, 'T> 
         * rhs: Node<'E, 'T>
+    
+    | Mul of 
+        lhs: Node<'E, 'T> 
+        * rhs: Node<'E, 'T>
+
+    | Div of 
+        lhs: Node<'E, 'T> 
+        * rhs: Node<'E, 'T>
 
     | Exponent of 
         lhs: Node<'E, 'T> 
@@ -108,10 +116,7 @@ and Expr<'E,'T> =
     | Yenda of List<PretypeNode>
     | Yenda2 of PretypeNode
 
-    | Assign of string
-        * tpe: PretypeNode
-        // * tpe: Node<'E, 'T>
-        * Body: Node<'E,'T>
+    | Assign of AssignType<'E, 'T>
     
     // | Let of name: string
     //     * tpe: PretypeNode
@@ -139,6 +144,13 @@ and Expr<'E,'T> =
 
 /// A type alias for an untyped AST, where there is no typing environment nor
 /// typing information (unit).
+and AssignType<'E, 'T> =
+    | WithBody of name: string 
+        * tpe: PretypeNode 
+        * body: Node<'E, 'T>
+    | WithoutBody of string 
+        * tpe: PretypeNode
+
 type UntypedAST = Node<unit, unit>
 
 

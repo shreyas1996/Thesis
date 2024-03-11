@@ -47,8 +47,10 @@ let rec internal formatASTRec (node: UntypedAST): Tree =
         | ValList(exprs) ->
             let exprNodes = List.map (fun (node: UntypedAST) -> ("", formatASTRec node)) exprs
             Node("ValList", [("Exprs", Node("", exprNodes))])
-        | Add(expr1, expr2) -> Node("Add", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
-        | Sub(expr1, expr2) -> Node("Sub", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
+        | Add(expr1, expr2) -> Node("Addition", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
+        | Sub(expr1, expr2) -> Node("Subtraction", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
+        | Mul(expr1, expr2) -> Node("Multiplication", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
+        | Div(expr1, expr2) -> Node("Division", [("LHS", formatASTRec expr1); ("RHS", formatASTRec expr2)])
         | Exponent(expr1, expr2) -> Node("Exponent", [("Base", formatASTRec expr1); ("Power", formatASTRec expr2)])
         | TP(expr) -> 
             // let tpExprs = List.map (fun (node: UntypedAST) -> ("", formatASTRec node)) expr
@@ -79,7 +81,10 @@ let rec internal formatASTRec (node: UntypedAST): Tree =
         | Tuple(exprs) ->
             let exprNodes = List.map (fun (node: UntypedAST) -> ("", formatASTRec node)) exprs
             Node("Tuple", [("Args", Node("", exprNodes))])
-        | Assign(name, tpe, body) -> Node("Assign", [("Name", Node(name, [])); ("Pretype", formatPretypeNode tpe); ("Body", formatASTRec body)])
+        | Assign(assignNode) -> 
+            match assignNode with 
+                | WithBody(name, tpe, body) -> Node("Assign", [("Name", Node(name, [])); ("Pretype", formatPretypeNode tpe); ("Body", formatASTRec body)])
+                | WithoutBody(name, tpe) -> Node("Assign", [("Name", Node(name, [])); ("Pretype", formatPretypeNode tpe)])
         | TestCase(name, expr) -> Node("TestCase", [("Name", Node(name, [])); ("Expr", formatASTRec expr)])
         | Scheme(name, exprs) ->
             let exprNodes = List.map (fun (node: UntypedAST) -> ("", formatASTRec node)) exprs
@@ -94,7 +99,7 @@ and internal formatPretypeNode (node: PretypeNode): Tree =
     | Pretype.TId(id) ->
         Node((formatPretypeDescr node $"Pretype Id \"%s{id}\""), [])
     | Pretype.TText(text) -> Node("Text", [("", Node(text, []))])
-    | Pretype.TSet(elementType) -> Node("Set", [("", formatPretypeNode elementType)])
+    | Pretype.TSet(elementType, isInf) -> Node("Set", [("", formatPretypeNode elementType); ("IsInf", Node(string isInf, []))])
     | Pretype.TProduct(elementType) ->
         let nodeArgs =
             List.map (fun (i, t) -> ((formatPretypeDescr t $"Type %d{i+1}"),
@@ -110,6 +115,10 @@ and internal formatPretypeNode (node: PretypeNode): Tree =
         Node((formatPretypeDescr node "Function pretype"),
              argChildren @
              [("return", formatPretypeNode ret)])
+        // Node((formatPretypeDescr node "Function pretype"),
+        //      [ ("", Node("Arg Types", argChildren));
+        //        ("", Node("Return types", retChildren))]
+        //      )
 
 and internal formatPretypeDescr (node: PretypeNode) (descr: string) : string =
     $"%s{descr}; pos: %s{node.Pos.Format}"
