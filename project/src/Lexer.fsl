@@ -43,23 +43,49 @@ rule tokenize = parse
 | "class"           { Parser.CLASS }
 | "type"            { Parser.TYPE }
 | "value"           { Parser.VALUE }
+| "axiom"           { Parser.AXIOM }
 | "test_case"       { Parser.TEST_CASE }
 | "end"             { Parser.END }
 // | "Text"            { Parser.TEXT }
-| "set"             { Parser.SET }
-| "infset"             { Parser.INFSET }
+// | "Bool"            { Parser.BOOL }
+// | "Int"            { Parser.INT }
+// | "Nat"            { Parser.NAT }
+// | "Real"            { Parser.REAL }
+// | "Unit"            { Parser.UNIT }
+| "-set"             { Parser.SET }
+| "-infset"             { Parser.INFSET }
+| "-list"             { Parser.LIST }
+| "-inflist"             { Parser.INFLIST }
 | "is"              { Parser.IS }
 | "union"           { Parser.UNION }
+| "\\/"              { Parser.OR }
+| "/\\"             { Parser.AND }
+| "inter"           { Parser.INTERSECTION }
+| "isin"            { Parser.BELONGS }
+| "~isin"            { Parser.NOT_BELONGS }
+| "exists"          { Parser.EXISTS }
+| "|"              { Parser.CHOICE }
+| "all"          { Parser.FORALL }
+| "<<"            { Parser.LSUBSET }
+| "<<="            { Parser.LSUBSET_EQUALS }
+| ">>"            { Parser.RSUBSET }
+| ">>="            { Parser.RSUBSET_EQUALS }
+| "<="              { Parser.LEQ }
+| ">="              { Parser.GEQ }
 | ">"               { Parser.GT }
 | "<"               { Parser.LT }
 | "><"              { Parser.PRODUCT }
 | "->"              { Parser.RARROW }
+| "-~->"            { Parser.PARTIAL_RARROW }
+| "=>"             { Parser.IMPLIES }
 | "-"               { Parser.MINUS }
 | "+"               { Parser.PLUS }
 | "*"               { Parser.MULTIPLY }
 | "/"               { Parser.DIVIDE }
 | "**"              { Parser.EXPONENT }
 | "="               { Parser.EQUALS }
+| "~="              { Parser.NOT_EQUALS }
+| ":-"               { Parser.DOT }
 | ":"               { Parser.COLON }
 | ";"               { Parser.SEMICOLON }
 | ","               { Parser.COMMA }
@@ -69,6 +95,7 @@ rule tokenize = parse
 | "}"               { Parser.RCURLY }
 | "["               { Parser.LBRACK }
 | "]"               { Parser.RBRACK }
+| "~"               { Parser.NOT }
 
 
 | ident             { Parser.IDENT (LexBuffer<_>.LexemeString lexbuf) }

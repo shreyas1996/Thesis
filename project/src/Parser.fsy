@@ -43,10 +43,13 @@ let mkNode (parseState: IParseState, inputIdx: int, e: UntypedExpr): UntypedAST 
 
 %token <string> IDENT
 
-%token SCHEME CLASS TYPE VALUE TEST_CASE END COLON EQUALS 
-%token SEMICOLON COMMA LPAREN RPAREN LBRACK RBRACK LCURLY RCURLY EOF
-%token SET INFSET RARROW IS UNION PRODUCT
-%token GT LT EXPONENT PLUS MINUS MULTIPLY DIVIDE
+%token SCHEME CLASS TYPE VALUE AXIOM TEST_CASE END EOF
+%token EQUALS NOT_EQUALS GT LT GTE LTE GEQ LEQ AND OR NOT
+%token SEMICOLON COLON COMMA LPAREN RPAREN LBRACK RBRACK LCURLY RCURLY
+%token RARROW PARTIAL_RARROW IMPLIES LSUBSET RSUBSET LSUBSET_EQUALS RSUBSET_EQUALS
+%token SET INFSET LIST INFLIST DOT
+%token IS UNION PRODUCT INTERSECTION BELONGS NOT_BELONGS EXISTS CHOICE FORALL
+%token EXPONENT PLUS MINUS MULTIPLY DIVIDE
 
 %%
 
@@ -66,23 +69,35 @@ classes:
 classDef:
     // | typeDefs { mkNode(parseState, 1, Expr.TP($1)) }
     // | valueDefs { mkNode(parseState, 1, Expr.TP($1)) }
-    | typeDefs valueDefs { mkNode(parseState, 1, Expr.ClassDef("", $1, $2)) }
-    | valueDefs typeDefs { mkNode(parseState, 1, Expr.ClassDef("", $2, $1)) }
+    | classIdent decList { mkNode(parseState, 1, Expr.ClassDef($1, $2)) }
+    // | classIdent typeDefs valueDefs { mkNode(parseState, 1, Expr.ClassDef($1, $2)) }
+    // | classIdent valueDefs typeDefs { mkNode(parseState, 1, Expr.ClassDef($1, $3, $2)) }
+
+decList:
+    | declarationExpr decList { $1 :: $2 }
+    | declarationExpr { [$1] }
+
+declarationExpr:
+    | typeDefs { mkNode(parseState, 1, ClassNode.TypeNode($1) |> Expr.ClasseDecl) }
+    | valueDefs { mkNode(parseState, 1, ClassNode.ValueNode($1) |> Expr.ClasseDecl) }
+    | axiomDefs { mkNode(parseState, 1, ClassNode.AxiomNode($1) |> Expr.ClasseDecl) }
 
 typeDefs:
     | TYPE typeDefList { $2 }
+    // | { [mkNode(parseState, 0, Expr.UnitVal)] }
     
 typeDefList:
     | typeDef COMMA typeDefList { $1 :: $3 }
     | typeDef { [$1] }
 
 typeDef:
-    | variable COLON pretypeExpr { mkNode(parseState, 1, Expr.TypeDef($1, $3)) }
-    | variable EQUALS pretypeExpr { mkNode(parseState, 2, (Expr.TypeDef($1, $3))) }
-    | variable { mkNode(parseState, 1, Expr.TypeDef($1, mkPretypeNode(parseState, 1, Pretype.TId("Any")))) }
+    | variable EQUALS EQUALS variantPretypeExpr { mkNode(parseState, 3, Expr.VariantDef($1, $4)) }
+    | variable EQUALS abbrevPretypeExpr { mkNode(parseState, 2, (Expr.AbbrevDef($1, $3))) }
+    | ident { mkNode(parseState, 1, Expr.SortDef($1, mkPretypeNode(parseState, 1, Pretype.TId($1)))) }
 
 valueDefs:
     | VALUE valueDefList { $2 }
+    // | { [mkNode(parseState, 0, Expr.UnitVal)] }
 
 valueDefList:
     | valueDef COMMA valueDefList { $1 :: $3 }
@@ -95,30 +110,39 @@ valueDef:
 //     | /* Empty */ { [] }
 //     | TEST_CASE ident LPAREN value RPAREN { mkNode(parseState, 1, Expr.TestCase($2, $4)) }
 
+axiomDefs:
+    | AXIOM axiomDefList { $2 }
+
+axiomDefList:
+    | axiomDef COMMA axiomDefList { $1 :: $3 }
+    | axiomDef { [$1] }
+
+axiomDef:
+    | FORALL forAllExpr DOT bodyExpr { mkNode(parseState, 1, Expr.AxiomDef($2, $4)) }
+
+forAllExpr:
+    | variableExpr COMMA forAllExpr { $1 :: $3 }
+    | variableExpr { [$1] }
+
+variableExpr:
+    | variable COLON pretype { mkNode(parseState, 2, AssignType.WithoutBody($1, $3) |> Expr.Assign) }
+
 simpleExpr:
     | primary parenExprCommaSeq { mkNode(parseState, 1, Expr.Application($1, $2)) }
     | LCURLY setExprs RCURLY { mkNode(parseState, 2, Expr.SetDef($2)) }
+    | simpleExpr BELONGS simpleExpr { mkNode(parseState, 2, Expr.Belongs($1, $3)) }
     | simpleExpr UNION simpleExpr { mkNode(parseState, 2, Expr.UnionDef($1, $3)) }
     | variable COLON functionExpr bodyExpr { mkNode(parseState, 2, AssignType.WithBody($1, $3, $4) |> Expr.Assign) }
     | variable COLON pretype bodyExpr { mkNode(parseState, 2, AssignType.WithBody($1, $3, $4) |> Expr.Assign) }
     | variable COLON pretype { mkNode(parseState, 2, AssignType.WithoutBody($1, $3) |> Expr.Assign) }
-    // | primary { $1 }
     | arithmeticExpr { $1 }
-    // | simpleExpr PRODUCT simpleExpr { mkNode(parseState, 2, Expr.Product($1, $3)) }
-    // | variable LPAREN variable COMMA variable RPAREN IS variable UNION variable 
 
 arithmeticExpr:
-    // | primary GT primary { mkNode(parseState, 2, Expr.GT($1, $3)) }
-    // | primary LT primary { mkNode(parseState, 2, Expr.LT($1, $3)) }
-    // | primary GT EQUALS primary { mkNode(parseState, 3, Expr.GTE($1, $4)) }
-    // | primary LT EQUALS primary { mkNode(parseState, 3, Expr.LTE($1, $4)) }
-    // | primary EQUALS primary { mkNode(parseState, 2, Expr.IsEqual($1, $3)) }
     | addExpr { $1 }
 
 tupleExpr:
     | LPAREN parenExprCommaSeq RPAREN               { $2 }
     | LPAREN exprCommaSeq RPAREN                    { $2 }
-    // | LPAREN simpleExpr COMMA simpleExpr RPAREN { mkNode(parseState, 3, Expr.Tuple($2, $4)) }
 
 addExpr:
     | addExpr PLUS mulExpr { mkNode(parseState, 2, Expr.Add($1, $3)) }
@@ -131,12 +155,9 @@ mulExpr:
     | exponentExpr { $1 }
 
 exponentExpr:
-    // | LPAREN arithmeticExpr RPAREN EXPONENT exponentExpr { mkNode(parseState, 2, Expr.Exponent($2, $5)) }
     | exponentExpr EXPONENT exponentExpr { mkNode(parseState, 2, Expr.Exponent($1, $3)) }
-    // | tupleExpr { $1 }
     | LPAREN arithmeticExpr RPAREN { $2 }
     | parenExprCommaSeq { mkNode(parseState, 1, Expr.Tuple($1)) }
-    // | arithmeticExpr { $1 }
     | primary { $1 }
 
 setExprs:
@@ -149,7 +170,6 @@ setExpr:
 bodyExpr:
     | simpleExpr IS simpleExpr { mkNode(parseState, 1, Expr.IsEqual($1, $3)) }
     | EQUALS valueExpr { $2 }
-    // | simpleExpr { $1 }
 
 valueExpr:
     | primary { $1 }
@@ -162,9 +182,16 @@ valueExprs:
     | valueExpr COMMA valueExprs { $1 :: $3 }
     | valueExpr { [$1] }
 
-pretypeExpr:
+abbrevPretypeExpr:
     | pretype { $1 }
     | parenArgProductSeq { mkPretypeNode(parseState, 1, Pretype.TProduct($1)) }
+
+variantPretypeExpr:
+    | choiceArgSeq { $1 }
+
+choiceArgSeq:
+    | pretype CHOICE choiceArgSeq { $1 :: $3 }
+    | pretype { [$1] }
 
 
 // Possibly empty equence of comma-separated expressions, between parentheses
@@ -187,11 +214,11 @@ parenArgProductSeq:
     | argTypesSeq { $1 }
 
 argTypesSeq:
-    | pretype                    { [$1] }
     | pretype PRODUCT argTypesSeq  { $1 :: $3 }
+    | pretype                    { [$1] }
 
 functionExpr:
-    | parenArgProductSeq RARROW pretypeExpr { mkPretypeNode(parseState, 2, Pretype.TFun($1, $3)) }
+    | parenArgProductSeq RARROW abbrevPretypeExpr { mkPretypeNode(parseState, 2, Pretype.TFun($1, $3)) }
 
 primary:
     | value       { $1 }
@@ -211,10 +238,14 @@ value:
 
 ident:
     | IDENT { $1 }
+
+classIdent:
+    | IDENT { $1 }
+    | { " " }
  
 pretype:
     // | functionExpr { $1 }
     // | parenArgProductSeq { mkPretypeNode(parseState, 1, Pretype.TProduct($1)) }
-    | pretype MINUS SET { mkPretypeNode(parseState, 3, Pretype.TSet($1, false)) }
-    | pretype MINUS INFSET { mkPretypeNode(parseState, 3, Pretype.TSet($1, true)) }
+    | pretype SET { mkPretypeNode(parseState, 3, Pretype.TSet($1, false)) }
+    | pretype INFSET { mkPretypeNode(parseState, 3, Pretype.TSet($1, true)) }
     | ident { mkPretypeNode(parseState, 1, Pretype.TId($1)) }

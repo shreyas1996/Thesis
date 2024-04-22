@@ -79,17 +79,33 @@ and Expr<'E,'T> =
         * tpe: PretypeNode
         // * scope: Node<'E, 'T>
         // * scope: string
+    
+    | SortDef of string * PretypeNode
+
+    | AbbrevDef of lhs: string 
+        * rhs: PretypeNode
+    
+    | VariantDef of lhs: string 
+        * rhs: List<PretypeNode>
 
     | ClassDef of string 
         * List<Node<'E, 'T>>
-        * List<Node<'E, 'T>> 
+        // * List<Node<'E, 'T>> 
         // * Option<List<Node<'E, 'T>>>
+
+    | ClasseDecl of ClassNode<'E, 'T>
 
     | ValueDef of Node<'E, 'T> 
 
     | SetDef of List<Node<'E, 'T>>
 
     | UnionDef of Node<'E, 'T> 
+        * Node<'E, 'T>
+    
+    | AxiomDef of lhs: List<Node<'E, 'T>> 
+        * rhs: Node<'E, 'T>
+    
+    | Belongs of Node<'E, 'T> 
         * Node<'E, 'T>
     
     | Add of 
@@ -150,6 +166,11 @@ and AssignType<'E, 'T> =
         * body: Node<'E, 'T>
     | WithoutBody of string 
         * tpe: PretypeNode
+
+and ClassNode<'E, 'T> = 
+    | TypeNode of List<Node<'E, 'T>>
+    | ValueNode of List<Node<'E, 'T>>
+    | AxiomNode of List<Node<'E, 'T>>
 
 type UntypedAST = Node<unit, unit>
 

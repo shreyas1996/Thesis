@@ -1,0 +1,4 @@
+/\ \/ = ~ ~= -set -infset -list -inflist -> -~-> => | all isin ~isin << >> <<= >>= exists inter < > <= >= :-
+axiom
+    all p:Person, db:Database :- register(p, db) is db union {p},
+    all p:Person, db:Database :- check(p, db) is p isin db

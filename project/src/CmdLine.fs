@@ -29,12 +29,25 @@ type ParserOptions = {
     Verbose: bool;
 }
 
+[<Verb("typecheck", HelpText="Typecheck the given input source file.")>]
+type TypecheckerOptions = {
+    [<Value(0, Required=true, MetaName="input file", HelpText="Source code file to be typechecked.")>]
+    File: string;
+
+    [<Option('l', "log-level", HelpText="Set the log level. Valid values: debug, info, warning, error. (Default: warning)")>]
+    LogLevel: Log.LogLevel;
+
+    [<Option('v', "verbose", HelpText="Enable verbose output. (Same effect of using option '--log-level debug')")>]
+    Verbose: bool;
+}
+
 /// Possible result of command line parsing.
 [<RequireQualifiedAccess>]
 type ParseResult =
     | Error of int
     | Tokenize of TokenizerOptions
     | Parse of ParserOptions
+    | Typecheck of TypecheckerOptions
 
 
 /// Parse the command line.  If successful, return the parsed options; otherwise,
@@ -50,5 +63,6 @@ let parse (args: string[]): ParseResult =
         match parsed.Value with
         | :? TokenizerOptions as opt -> ParseResult.Tokenize(opt)
         | :? ParserOptions as opt -> ParseResult.Parse(opt)
+         | :? TypecheckerOptions as opt -> ParseResult.Typecheck(opt)
         | x -> failwith $"BUG: unexpected command line parsed value: %O{x}"
     | x -> failwith $"BUG: unexpected command line parsing result: %O{x}"
