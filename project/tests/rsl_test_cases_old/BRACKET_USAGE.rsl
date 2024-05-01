@@ -1,0 +1,7 @@
+scheme BRACKET_USAGE =
+    class
+      value
+        simplify : Int -> Int
+        simplify(x) is ((x + 3) * (x - 5) + 12)
+    end
+  

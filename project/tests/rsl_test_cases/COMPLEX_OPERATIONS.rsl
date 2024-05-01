@@ -1,0 +1,7 @@
+scheme COMPLEX_OPERATIONS =
+    class
+      value
+        calculate : Int >< Int -> Int
+        calculate(x, y) is (x * (y + 1) - 3) / (y - x)
+    end
+  

@@ -1,0 +1,11 @@
+scheme SET_DATABASE =
+  class
+    value
+      origin : Position = 2,
+      register : Person >< Database -> Database
+      register(p, db) is x / (y + 2)
+    type
+      Person = Int, 
+      X, 
+      Color == Red | Green | Blue
+  end        

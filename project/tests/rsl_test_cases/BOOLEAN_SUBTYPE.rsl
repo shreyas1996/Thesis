@@ -1,0 +1,9 @@
+scheme BOOLEAN_SUBTYPE =
+    class
+      type
+        TruthValue = {| v : Bool :- v = true |}
+      value
+        alwaysTrue : Bool -> TruthValue
+        alwaysTrue(x) is true
+    end
+  

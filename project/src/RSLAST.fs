@@ -1,5 +1,5 @@
 //
-module AST
+module RSLAST
 
 [<RequireQualifiedAccess>]
 type Position =
@@ -102,11 +102,63 @@ and Expr<'E,'T> =
     | UnionDef of Node<'E, 'T> 
         * Node<'E, 'T>
     
+    | IntersectionDef of Node<'E, 'T> 
+        * Node<'E, 'T>
+    
     | AxiomDef of lhs: List<Node<'E, 'T>> 
         * rhs: Node<'E, 'T>
     
     | Belongs of Node<'E, 'T> 
         * Node<'E, 'T>
+    
+    | Not of Node<'E, 'T>
+
+    | And of lhs: Node<'E, 'T> 
+        * rhs: Node<'E, 'T>
+    
+    | Or of lhs: Node<'E, 'T> 
+        * rhs: Node<'E, 'T>
+    
+    | Let of name: string 
+        * init: Node<'E, 'T> 
+        * scope: Node<'E, 'T>
+    
+    | If of cond: Node<'E, 'T>
+        * thenBranch: Node<'E, 'T>
+        * elseBranch: Node<'E, 'T>
+    
+    | NotBelongs of Node<'E, 'T> 
+        * Node<'E, 'T>
+    
+    | Equals of Node<'E, 'T> 
+        * Node<'E, 'T>
+    
+    | NotEquals of Node<'E, 'T>
+        * Node<'E, 'T>
+
+    | LessThan of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
+    
+    | GreaterThan of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
+    
+    | LessOrEqual of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
+    
+    | GreaterOrEqual of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
+    
+    | LSubset of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
+    
+    | RSubset of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
+    
+    | LSubsetEqual of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
+    
+    | RSubsetEqual of lhs: Node<'E, 'T>
+        * rhs: Node<'E, 'T>
     
     | Add of 
         lhs: Node<'E, 'T> 

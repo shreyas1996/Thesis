@@ -1,0 +1,7 @@
+scheme BOOLEAN_LOGIC =
+    class
+      value
+        logicCheck : Bool >< Bool -> Bool
+        logicCheck(a, b) is (a /\ ~b) \/ (b /\ ~a)
+    end
+  

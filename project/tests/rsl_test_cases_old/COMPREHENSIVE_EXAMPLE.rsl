@@ -1,0 +1,30 @@
+scheme COMPREHENSIVE_EXAMPLE =
+    class
+      type
+        Num = Int,
+        Status == New | Active | Inactive
+  
+      value
+        complexFunction : Num >< Num -> Bool
+        complexFunction(x, y) is
+          let
+            condition = (x > y /\ x ~= 0)
+          in
+            if condition then true else false end
+            
+        adjust : Status -> Int
+        adjust(s) is
+          case s of
+            New -> 1
+            Active -> 2
+            Inactive -> 3
+  
+      axiom
+        [valueCheck] all x : Num :- (x > 0) ⇒ (complexFunction(x, 0) = true),
+        [statusValid] all s : Status :- (adjust(s) >= 1 /\ adjust(s) <= 3)
+  
+      value
+        evaluateLogic : Bool -> Bool
+        evaluateLogic(b) is ~b /\ (b \/ true)
+    end
+  

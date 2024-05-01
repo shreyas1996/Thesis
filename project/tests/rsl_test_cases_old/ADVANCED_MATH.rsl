@@ -1,0 +1,11 @@
+scheme ADVANCED_MATH =
+    class
+      value
+        compute : Int >< Int -> Int
+        compute(x, y) is 
+          let
+            temp = x * y
+          in
+            temp / (x + y) end
+    end
+  

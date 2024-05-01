@@ -1,0 +1,14 @@
+scheme COMPLEX_TYPES =
+    class
+      type
+        Shape == Circle | Square | Triangle,
+        Point = Int >< Int
+      value
+        area : Shape -> Int
+        area(s) is 
+          case s of
+            Circle -> 78
+            Square -> 25
+            Triangle -> 35
+    end
+  

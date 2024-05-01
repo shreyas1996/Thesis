@@ -1,0 +1,8 @@
+scheme COLORFUL =
+    class
+      type
+        Color == Red | Yellow | Blue
+      value
+        favoriteColor : Color = Red
+    end
+  

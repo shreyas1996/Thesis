@@ -43,12 +43,17 @@ rule tokenize = parse
 | "class"           { Parser.CLASS }
 | "type"            { Parser.TYPE }
 | "value"           { Parser.VALUE }
+| "let"            { Parser.LET }
+| "in"             { Parser.IN }
+| "if"              { Parser.IF }
+| "then"            { Parser.THEN }
+| "else"            { Parser.ELSE }
 | "axiom"           { Parser.AXIOM }
 | "test_case"       { Parser.TEST_CASE }
 | "end"             { Parser.END }
 // | "Text"            { Parser.TEXT }
-// | "Bool"            { Parser.BOOL }
-// | "Int"            { Parser.INT }
+| "Bool"            { Parser.BOOL }
+| "Int"            { Parser.INT }
 // | "Nat"            { Parser.NAT }
 // | "Real"            { Parser.REAL }
 // | "Unit"            { Parser.UNIT }
@@ -64,6 +69,7 @@ rule tokenize = parse
 | "isin"            { Parser.BELONGS }
 | "~isin"            { Parser.NOT_BELONGS }
 | "exists"          { Parser.EXISTS }
+| "abs"            { Parser.ABS }
 | "|"              { Parser.CHOICE }
 | "all"          { Parser.FORALL }
 | "<<"            { Parser.LSUBSET }

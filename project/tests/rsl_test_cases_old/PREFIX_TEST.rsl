@@ -1,0 +1,7 @@
+scheme PREFIX_TEST =
+    class
+      value
+        negate : Int -> Int
+        negate(x) is -x
+    end
+  

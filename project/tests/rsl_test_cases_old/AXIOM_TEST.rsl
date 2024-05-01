@@ -1,0 +1,6 @@
+scheme AXIOM_TEST =
+    class
+      axiom
+        [basicLogic] true /\ false ⇒ false
+    end
+  

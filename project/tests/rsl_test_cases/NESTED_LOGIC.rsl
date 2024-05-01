@@ -1,0 +1,7 @@
+scheme NESTED_LOGIC =
+    class
+      value
+        evaluate : Int >< Int -> Bool
+        evaluate(x, y) is ((x > 5) /\ (y < 5)) \/ ((x <= 5) /\ (y >= 5))
+    end
+  

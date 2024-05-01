@@ -1,4 +1,4 @@
-module Util
+module RSLUtil
 
 /// Return the newline representation (may be e.g. "\n" on Linux and MacOS,
 /// "\r\n" on Windows).
@@ -43,7 +43,7 @@ let lexFile (fileName: string): Result<list<Parser.token>, string> =
 
 
 /// Parse the given file.
-let parseFile (fileName: string): Result<AST.Node<AST.SchemeDecl>, string> =
+let parseFile (fileName: string): Result<AST.UntypedAST, string> =
     try
         use textReader = new System.IO.StreamReader(fileName)
         let lexbuf = (Lexer.LexBuffer<char>.FromTextReader textReader)
@@ -63,7 +63,7 @@ let parseFile (fileName: string): Result<AST.Node<AST.SchemeDecl>, string> =
             let message = e.Message
             let lastToken = System.String(lexbuf.Lexeme)
             // Note: internal line & column numbers start from 0
-            Error $"%s{e.ToString()} \n %s{fileName}:%d{line+1}:%d{column}: %s{message} (last-seen token: '%s{lastToken}')"
+            Error $"%s{fileName}:%d{line+1}:%d{column}: %s{message} (last-seen token: '%s{lastToken}')"
 
     with // Top-level exception, possibly thrown by StreamReader creation
     | e -> Error e.Message

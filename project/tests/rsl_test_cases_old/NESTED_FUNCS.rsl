@@ -1,0 +1,7 @@
+scheme NESTED_FUNCS =
+    class
+      value
+        calculate : Int >< Int -> Int
+        calculate(x, y) is x * y + 3
+    end
+  

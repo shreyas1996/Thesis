@@ -1,0 +1,7 @@
+scheme IF_BASIC =
+    class
+      value
+        test : Int -> String
+        test(x) is if x > 5 then "High" else "Low"
+    end
+  

@@ -1,0 +1,11 @@
+scheme SIMPLE_MATH =
+    class
+      type
+        Number == n1 | n2
+      value
+        add : Number >< Number -> Int
+        add(x, y) is x + y
+      axiom
+        [basicAddition] all x : Int :- all y : Int :- add(x, y) = x + y
+    end
+  

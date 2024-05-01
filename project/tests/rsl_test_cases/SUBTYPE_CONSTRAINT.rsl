@@ -1,0 +1,9 @@
+scheme SUBTYPE_CONSTRAINT =
+    class
+      type
+        PositiveInt = {| x : Int :- x > 0 |}
+      value
+        double : PositiveInt -> Int
+        double(x) is x * 2
+    end
+  

@@ -16,6 +16,12 @@ scheme SET_DATABASE =
       c: Color = white,
       s1: X,
       s2: X,
+      ~abc(s1, s2),
+      s1 = s2,
+      1 > 2,
+      2 < 4,
+      3 >= 3,
+      4 <= 4,
       name : Person = "John",
       distance : Position >< Position -> Real >< Real
       distance((x1,y1, x3, y3),(x2,y2)) is 
