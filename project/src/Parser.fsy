@@ -19,54 +19,11 @@ let pos (parseState: IParseState, inputIdx: int): AST.Position =
 // this expression (it will be used e.g. when reporting error messages).
 let mkNode (parseState: IParseState, inputIdx: int, node: 'C): AST.Node<'C> =
     printfn "mkNode %A" inputIdx;
-    { Pos = pos(parseState, inputIdx);  NodeName = "" ; NodeCategory = node }
-// let mkSimpleType name pos = TSimple(name, pos)
-// let mkSetType baseType pos = TSet(baseType, pos)
+    { Pos = pos(parseState, inputIdx) ; NodeCategory = node }
+
 %}
 
 %start program
-// %type <AST.UntypedAST> program
-// %type <AST.FunctionDefOperator> functionDefOp
-// %type <AST.FunctionDeclOperator> functionDeclOp
-// %type <AST.PrefixOperator> prefixOperator
-// %type <AST.PrefixConnective> prefixConnective
-// %type <AST.InfixOperator> infixOperator
-// %type <AST.InfixConnective> infixConnective
-// %type <AST.Quantifiers> quantifiedOp
-// %type <AST.ValueLiteral> valueLiteralExpr
-// %type <AST.TypeLiteral> typeLiteralExpr
-// %type <AST.TypeName> typeNameExpr
-// // %type <AST.Position> position
-// %type <AST.TypeExpr> typeExpr
-// %type <AST.SubtypeExpr> subtypeExpr
-// %type <AST.SingleTyping> singleTypingExpr
-// %type <AST.BracketedTypeExpr> bracketedTypeExpr
-// %type <AST.ValueExpr> valueExpr
-// %type <AST.ApplicationExpr> applicationExpr
-// %type <AST.BracketedExpr> bracketedExpr
-// %type <AST.QuantifiedExpr> quantifiedExpr
-// %type <AST.AxiomInfixExpr> axiomInfixExpr
-// %type <AST.ValueInfixExpr> valueInfixExpr
-// %type <AST.AxiomPrefixExpr> axiomPrefixExpr
-// %type <AST.ValuePrefixExpr> valuePrefixExpr
-// %type <AST.LetExpr> letExpr
-// %type <AST.IfExpr> ifExpr
-// %type <AST.TypeDef> typeDef
-// %type <AST.VariantDef> variantDefExpr
-// %type <AST.AbbrevDef> abbrevDefExpr
-// %type <AST.SortDef> sortDefExpr
-// %type <AST.TypeDecl> typeDecl
-// %type <AST.BodyExpr> explicitFunctionBodyExpr
-// %type <AST.ValueDef> valueDef
-// %type <AST.ValueSignature> valueSignatureExpr
-// %type <AST.ExplicitValueDef> explicitValueDef
-// %type <AST.ExplicitFunctionDef> explicitFunctionDef
-// %type <AST.ValueDecl> valueDecl
-// %type <AST.AxiomDef> axiomDef
-// %type <AST.AxiomDecl> axiomDecl
-// %type <AST.Decl> declExpr
-// %type <AST.ClassExpr> classExpr
-// %type <AST.SchemeDef> schemeDef
 %type <AST.Node<AST.SchemeDecl>> program
 // Define constants
 %token <bool> LIT_BOOL
@@ -90,6 +47,14 @@ let mkNode (parseState: IParseState, inputIdx: int, node: 'C): AST.Node<'C> =
 %token MULTIPLY DIVIDE
 %token EXPONENT
 
+%right FORALL EXISTS
+%right IMPLIES
+%right OR
+%right AND
+%left EQUALS NOT_EQUALS GT LT GEQ LEQ
+%left PLUS MINUS
+%left MULTIPLY DIVIDE
+
 %%
 
 program:
@@ -108,8 +73,6 @@ schemeDef:
         {
             printfn "SchemeDefNode %A %A" $1 $3;
             mkNode(parseState, 1, {
-                // Pos = pos(parseState, 1); 
-                // NodeName = "SchemeDefNode"
                 name = $1;
                 classExpr = $3;
             })
@@ -121,61 +84,31 @@ classExpr:
         { 
             printfn "ClassExprNode %A" $2;
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ClassExprNode"
                 optDecl = $2;
             })
         
         }
 
 optDeclStringExpr:
-    | declExpr { Some $1 }
-    | { None }
+    | declExprList { $1 }
 
-// declExprList:
-//     | declExpr declExprList { $1 :: $2 }
-//     | declExpr { [$1] }
-
-// declExpr:
-//     | typeDecl { Decl.TypeDecl($1) }
-//     | valueDecl { Decl.ValueDecl($1) }
-//     | axiomDecl { Decl.AxiomDecl($1) }
+declExprList:
+    | declExpr declExprList { $1 :: $2 }
+    | declExpr { [$1] }
 
 declExpr:
-    | declSeq 
-        { 
-            let typeDecl = List.tryFind (function | {TypeDecl = Some _} -> true | _ -> false) $1
-            let valueDecl = List.tryFind (function | {ValueDecl = Some _} -> true | _ -> false) $1
-            let axiomDecl = List.tryFind (function | {AxiomDecl = Some _} -> true | _ -> false) $1
-            mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "DeclExprNode"
-                TypeDecl = Option.bind (fun x -> x.TypeDecl) typeDecl
-                ValueDecl = Option.bind (fun x -> x.ValueDecl) valueDecl
-                AxiomDecl = Option.bind (fun x -> x.AxiomDecl) axiomDecl
-            })
-        }
-
-declSeq:
-    | declSeq typeDecl { if List.exists (function | {TypeDecl = Some _} -> true | _ -> false) $1 then failwith "Duplicate TypeDecl" else {TypeDecl = $2; ValueDecl = None; AxiomDecl = None} :: $1 }
-    | declSeq valueDecl { if List.exists (function | {ValueDecl = Some _} -> true | _ -> false) $1 then failwith "Duplicate ValueDecl" else {TypeDecl = None; ValueDecl = $2; AxiomDecl = None} :: $1 }
-    | declSeq axiomDecl { if List.exists (function | {AxiomDecl = Some _} -> true | _ -> false) $1 then failwith "Duplicate AxiomDecl" else {TypeDecl = None; ValueDecl = None; AxiomDecl = $2} :: $1 }
-    | typeDecl { [{TypeDecl = $1; ValueDecl = None; AxiomDecl = None}] }
-    | valueDecl { [{TypeDecl = None; ValueDecl = $1; AxiomDecl = None}] }
-    | axiomDecl { [{TypeDecl = None; ValueDecl = None; AxiomDecl = $1}] }
+    | typeDecl { Decl.TypeDecl($1) }
+    | valueDecl { Decl.ValueDecl($1) }
+    | axiomDecl { Decl.AxiomDecl($1) }
 
 typeDecl:
     | TYPE typeDefList
         { 
-            Some(mkNode(parseState, 1, {
-                // Pos = pos(parseState, 1); 
-                // NodeName = "TypeDeclNode"
+            (mkNode(parseState, 1, {
                 typeDefList = $2
             }))
         
         }
-    
-    | { None }
 
 typeDefList:
     | typeDef COMMA typeDefList { $1 :: $3 }
@@ -190,8 +123,6 @@ sortDefExpr:
     | ident
         {
             mkNode(parseState, 1, {
-                // Pos = pos(parseState, 1); 
-                // NodeName = "SortDefNode"
                 name = $1;
             })
         
@@ -201,8 +132,6 @@ variantDefExpr:
     | ident EQUALS EQUALS identChoice
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "VariantDefNode"
                 name = $1;
                 choice = $4;
             })
@@ -218,8 +147,6 @@ abbrevDefExpr:
     | ident EQUALS typeExpr
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "AbbrevDefNode"
                 name = $1;
                 typeExpr = $3;
             })
@@ -229,15 +156,11 @@ abbrevDefExpr:
 valueDecl:
     | VALUE valueDefList
         {
-            Some(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueDeclNode"
+            (mkNode(parseState, 1,{
                 valueDefList = $2
             }))
         
         }
-    | { None }
-
 
 valueDefList:
     | valueDef COMMA valueDefList { $1 :: $3 }
@@ -252,8 +175,6 @@ valueSignatureExpr:
     | ident COLON typeExpr
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueSignatureNode"
                 name = $1;
                 typeExpr = $3;
             })
@@ -265,8 +186,6 @@ explicitValueDef:
         {
             printfn "ExplicitValueDefNode %A %A %A" $1 $3 $5;
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 4); 
-                // NodeName = "ExplicitValueDefNode"
                 name = $1;
                 typeExpr = $3;
                 valueExpr = $5;
@@ -278,8 +197,6 @@ explicitFunctionDef:
     | ident COLON typeExprProduct functionDeclOp typeExpr explicitFunctionBodyExpr
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ExplicitFunctionDefNode"
                 name = $1;
                 args = $3;
                 functionDeclOperator = $4;
@@ -297,8 +214,6 @@ explicitFunctionBodyExpr:
     | ident LPAREN identList RPAREN functionDefOp valueExpr
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ExplicitFunctionBodyExprNode"
                 name = $1;
                 args = $3;
                 functionDefOperator = $5;
@@ -318,14 +233,11 @@ identList:
 axiomDecl:
     | AXIOM axiomDefList
         {
-            Some(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "AxiomDeclNode"
+            (mkNode(parseState, 1,{
                 axiomDefList = $2
             }))
         
         }
-    | { None }
     
 
 axiomDefList:
@@ -336,17 +248,22 @@ axiomDef:
     | optionAxiomName valueExpr
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "AxiomDefNode"
                 name = $1;
                 logicalValueExpr = $2;
             })
         
         }
+    | valueExpr
+        {
+            mkNode(parseState, 1,{
+                name = "";
+                logicalValueExpr = $1;
+            })
+        
+        }
 
 optionAxiomName:
-    | LBRACK ident RBRACK { Some $2 }
-    | { None }
+    | LBRACK ident RBRACK { $2 }
 
 typeExpr:
     | typeLiteralExpr { mkNode(parseState, 1, TypeExpr.TypeLiteral($1)) }
@@ -363,8 +280,6 @@ typeNameExpr:
         { 
             printfn "TypeNameNode %A" $1;
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "TypeNameNode"
                 name = $1;
             })
         }
@@ -373,8 +288,6 @@ subtypeExpr:
     | LCURLY CHOICE singleTypingExpr DOT valueExpr CHOICE RCURLY
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "SubtypeExprNode"
                 singleTyping = $3;
                 valueExpr = $5;
             })
@@ -385,8 +298,6 @@ singleTypingExpr:
     | ident COLON typeExpr 
         { 
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "SingleTypingrNode"
                 name = $1;
                 typeExpr = $3;
             })
@@ -396,8 +307,6 @@ bracketedTypeExpr:
     | LPAREN typeExpr RPAREN 
         {
             mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "BracketedTypeExprNode"
                 typeExpr = $2;
             })
         }
@@ -410,11 +319,9 @@ valueExpr:
     | quantifiedExpr { $1 }
 
 quantifiedExpr:
-    | quantifiedOp singleTypingExprList DOT valueExpr 
+    | quantifiedOp singleTypingExprList DOT quantifiedExpr 
         {
             mkNode(parseState, 1,ValueExpr.QuantifiedExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "QuantifiedExprNode"
                 quantifier = $1;
                 singleTypingList = $2;
                 valueExpr = $4;
@@ -432,9 +339,7 @@ axiomInfixExpr:
 impliesExpr:
     | orExpr IMPLIES impliesExpr 
         {
-            mkNode(parseState, 1,ValueExpr.AxiomInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "AxiomInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.AxiomInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixConnective = InfixConnective.Implies;
                 rightExpr = $3;
@@ -443,11 +348,9 @@ impliesExpr:
     | orExpr { $1 }
 
 orExpr:
-    | andExpr OR orExpr 
+    | orExpr OR andExpr 
         {
-            mkNode(parseState, 1,ValueExpr.AxiomInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "AxiomInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.AxiomInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixConnective = InfixConnective.Or;
                 rightExpr = $3;
@@ -458,9 +361,7 @@ orExpr:
 andExpr:
     | valueInfixExpr AND andExpr 
         {
-           mkNode(parseState, 1, ValueExpr.AxiomInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "AxiomInfixExprNode"
+           mkNode(parseState, 1, ValueExpr.AxiomInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixConnective = InfixConnective.And;
                 rightExpr = $3;
@@ -472,61 +373,49 @@ valueInfixExpr:
     | equalsExpr { $1 }
 
 equalsExpr:
-    | equalsExpr EQUALS addExpr 
+    | addExpr EQUALS equalsExpr 
         {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.Equals;
                 rightExpr = $3;
             })))
         }
-    | equalsExpr NOT_EQUALS addExpr 
+    | addExpr NOT_EQUALS equalsExpr 
         {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.NotEquals;
                 rightExpr = $3;
             })))
         }
-    | equalsExpr GT addExpr 
+    | addExpr GT equalsExpr 
         {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.GreaterThan;
                 rightExpr = $3;
             })))
         }
-    | equalsExpr LT addExpr 
+    | addExpr LT equalsExpr 
         {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.LessThan;
                 rightExpr = $3;
             })))
         }
-    | equalsExpr GEQ addExpr 
+    | addExpr GEQ equalsExpr 
         {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.GreaterOrEqual;
                 rightExpr = $3;
             })))
         }
-    | equalsExpr LEQ addExpr 
+    | addExpr LEQ equalsExpr 
         {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.LessOrEqual;
                 rightExpr = $3;
@@ -537,9 +426,7 @@ equalsExpr:
 addExpr:
     | addExpr PLUS mulExpr 
         { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.Add;
                 rightExpr = $3;
@@ -547,9 +434,7 @@ addExpr:
          }
     | addExpr MINUS mulExpr 
         { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.Subtract;
                 rightExpr = $3;
@@ -558,21 +443,17 @@ addExpr:
     | mulExpr { $1 }
 
 mulExpr:
-    | mulExpr MULTIPLY mulExpr 
+    | mulExpr MULTIPLY valueLiteralExpr 
         { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.Multiply;
                 rightExpr = $3;
             })))
          }
-    | mulExpr DIVIDE mulExpr 
+    | mulExpr DIVIDE valueLiteralExpr 
         { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValueInfixExprNode"
+            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
                 leftExpr = $1;
                 infixOperator = InfixOperator.Divide;
                 rightExpr = $3;
@@ -593,8 +474,6 @@ applicationExpr:
     | ident LPAREN valueExprList RPAREN 
         {
             mkNode(parseState, 1,ValueExpr.ApplicationExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ApplicationExprNode"
                 name = $1;
                 args = $3;
             })))
@@ -609,8 +488,6 @@ bracketedExpr:
     | LPAREN valueExpr RPAREN 
         {
             mkNode(parseState, 1,ValueExpr.BracketedExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "BracketedExprNode"
                 valueExpr = $2;
             })))
         }
@@ -624,8 +501,6 @@ axiomPrefixExpr:
     | prefixConnective valueExpr 
         {
             mkNode(parseState, 1,ValueExpr.AxiomPrefixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "AxiomPrefixExprNode"
                 prefixConnective = $1;
                 valueExpr = $2;
             })))
@@ -639,8 +514,6 @@ valuePrefixExpr:
     | prefixOperator valueExpr 
         {
             mkNode(parseState, 1,ValueExpr.ValuePrefixExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "ValuePrefixExprNode"
                 prefixOperator = $1;
                 valueExpr = $2;
             })))
@@ -654,8 +527,6 @@ letExpr:
     | LET ident EQUALS valueExpr IN valueExpr END 
         {
              mkNode(parseState, 1,ValueExpr.LetExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "LetExprNode"
                 name = $2;
                 initExpr = $4;
                 scopeExpr = $6;
@@ -668,8 +539,6 @@ ifExpr:
     | IF valueExpr THEN valueExpr ELSE valueExpr END
         {
             mkNode(parseState, 1, ValueExpr.IfExpr(mkNode(parseState, 1,{
-                // Pos = pos(parseState, 1); 
-                // NodeName = "IfExprNode"
                 condExpr = $2;
                 thenExpr = $4;
                 elseExpr = $6;

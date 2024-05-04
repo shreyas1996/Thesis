@@ -5,6 +5,8 @@ scheme SIMPLE_MATH =
       value
         add : Number >< Number -> Int
         add(x, y) is x + y
+      type
+        MyInt = Int
       axiom
         [basicAddition] all x : Int :- all y : Int :- add(x, y) = x + y
     end

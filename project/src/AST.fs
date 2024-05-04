@@ -18,7 +18,6 @@ type Position =
 type Node<'C> =
     {
         Pos: Position
-        NodeName: string
         NodeCategory: 'C
     }
 
@@ -244,7 +243,7 @@ and ValueDecl =
     }
 and AxiomDef =
     {
-        name: Option<string>
+        name: string
         logicalValueExpr: Node<ValueExpr>
 
     }
@@ -255,16 +254,13 @@ and AxiomDecl =
     }
 
 and Decl =
-    {
-        TypeDecl: Option<Node<TypeDecl>>
-        ValueDecl: Option<Node<ValueDecl>>
-        AxiomDecl: Option<Node<AxiomDecl>>
-
-    }
+    | TypeDecl of Node<TypeDecl>
+    | ValueDecl of Node<ValueDecl>
+    | AxiomDecl of Node<AxiomDecl>
 
 and ClassExpr = 
     {
-        optDecl: Option<Node<Decl>>
+        optDecl: List<Decl>
 
     }
 and SchemeDef = 

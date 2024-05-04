@@ -6,6 +6,6 @@ scheme SUBTYPE_AXIOM =
         inverse : NonZero -> Int
         inverse(x) is 1 / x
       axiom
-        [inverseProperty] all x : NonZero :- inverse(x) * x = 1
+        [inverseProperty] (all x : NonZero :- inverse(x) * x = 1)
     end
   
