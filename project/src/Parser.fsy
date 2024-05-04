@@ -42,7 +42,7 @@ let mkNode (parseState: IParseState, inputIdx: int, node: 'C): AST.Node<'C> =
 %token SET INFSET LIST INFLIST DOT
 %token IS UNION PRODUCT INTERSECTION BELONGS NOT_BELONGS EXISTS CHOICE FORALL
 
-%token EQUALS NOT_EQUALS GT LT GTE LTE GEQ LEQ
+%token EQUALS NOT_EQUALS GT LT GEQ LEQ
 %token PLUS MINUS
 %token MULTIPLY DIVIDE
 %token EXPONENT
@@ -316,234 +316,223 @@ typeExprProduct:
     | typeExpr { [$1] }
 
 valueExpr:
-    | quantifiedExpr { $1 }
+    | quantifiedExpr { mkNode(parseState, 1,ValueExpr.QuantifiedExpr($1)) }
+    | valueExpr_9 { $1 }
 
 quantifiedExpr:
-    | quantifiedOp singleTypingExprList DOT quantifiedExpr 
+    | quantifiedOp singleTypingExprList DOT valueExpr 
         {
-            mkNode(parseState, 1,ValueExpr.QuantifiedExpr(mkNode(parseState, 1,{
+            mkNode(parseState, 1,{
                 quantifier = $1;
                 singleTypingList = $2;
                 valueExpr = $4;
-            })))
+            })
         }
-    | axiomInfixExpr { $1 }
 
 quantifiedOp:
     | EXISTS { Quantifiers.Exists }
     | FORALL { Quantifiers.Forall }
 
-axiomInfixExpr:
-    | impliesExpr { $1 }
-
-impliesExpr:
-    | orExpr IMPLIES impliesExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.AxiomInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixConnective = InfixConnective.Implies;
-                rightExpr = $3;
-            })))
-        }
-    | orExpr { $1 }
-
-orExpr:
-    | orExpr OR andExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.AxiomInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixConnective = InfixConnective.Or;
-                rightExpr = $3;
-            })))
-        }
-    | andExpr { $1 }
-
-andExpr:
-    | valueInfixExpr AND andExpr 
-        {
-           mkNode(parseState, 1, ValueExpr.AxiomInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixConnective = InfixConnective.And;
-                rightExpr = $3;
-            })))
-        }
-    | valueInfixExpr { $1 }
-
-valueInfixExpr:
-    | equalsExpr { $1 }
-
-equalsExpr:
-    | addExpr EQUALS equalsExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.Equals;
-                rightExpr = $3;
-            })))
-        }
-    | addExpr NOT_EQUALS equalsExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.NotEquals;
-                rightExpr = $3;
-            })))
-        }
-    | addExpr GT equalsExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.GreaterThan;
-                rightExpr = $3;
-            })))
-        }
-    | addExpr LT equalsExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.LessThan;
-                rightExpr = $3;
-            })))
-        }
-    | addExpr GEQ equalsExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.GreaterOrEqual;
-                rightExpr = $3;
-            })))
-        }
-    | addExpr LEQ equalsExpr 
-        {
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.LessOrEqual;
-                rightExpr = $3;
-            })))
-        }
-    | addExpr { $1 }
-
-addExpr:
-    | addExpr PLUS mulExpr 
-        { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.Add;
-                rightExpr = $3;
-            })))
-         }
-    | addExpr MINUS mulExpr 
-        { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.Subtract;
-                rightExpr = $3;
-            })))
-         }
-    | mulExpr { $1 }
-
-mulExpr:
-    | mulExpr MULTIPLY valueLiteralExpr 
-        { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.Multiply;
-                rightExpr = $3;
-            })))
-         }
-    | mulExpr DIVIDE valueLiteralExpr 
-        { 
-            mkNode(parseState, 1,ValueExpr.ValueInfixExpr(mkNode(parseState, 2,{
-                leftExpr = $1;
-                infixOperator = InfixOperator.Divide;
-                rightExpr = $3;
-            })))
-         }
-    | valueLiteralExpr { $1 }
-
-valueLiteralExpr:
-    | LIT_BOOL { printfn "ValueExpr.ValueLiteral %A" $1; mkNode(parseState, 1, ValueExpr.ValueLiteral(mkNode(parseState, 1, ValueLiteral.Bool($1)))) }
-    | LIT_INT { printfn "ValueExpr.ValueLiteral %A" $1; mkNode(parseState, 1, ValueExpr.ValueLiteral(mkNode(parseState, 1, ValueLiteral.Int($1)))) }
-    | valueNameExpr { $1 }
-
-valueNameExpr:
-    | ident { printfn "ValueExpr.ValueName %A" $1; mkNode(parseState, 1, ValueExpr.ValueName($1)) }
-    | applicationExpr { $1 }
-
-applicationExpr:
-    | ident LPAREN valueExprList RPAREN 
-        {
-            mkNode(parseState, 1,ValueExpr.ApplicationExpr(mkNode(parseState, 1,{
-                name = $1;
-                args = $3;
-            })))
-        }
-    | bracketedExpr { $1 }
-
-valueExprList:
-    | valueExpr COMMA valueExprList { $1 :: $3 }
-    | valueExpr { [$1] }
-
-bracketedExpr:
-    | LPAREN valueExpr RPAREN 
-        {
-            mkNode(parseState, 1,ValueExpr.BracketedExpr(mkNode(parseState, 1,{
-                valueExpr = $2;
-            })))
-        }
-    | axiomPrefixExpr { $1 }
-
 singleTypingExprList:
     | singleTypingExpr COMMA singleTypingExprList { $1 :: $3 }
     | singleTypingExpr { [$1] }
 
-axiomPrefixExpr:
-    | prefixConnective valueExpr 
+valueExpr_9:
+    | impliesExpr { mkNode(parseState, 1,ValueExpr.AxiomInfixExpr($1))}
+    | valueExpr_8 { $1 }
+
+
+impliesExpr:
+    | valueExpr_8 IMPLIES valueExpr_9 
         {
-            mkNode(parseState, 1,ValueExpr.AxiomPrefixExpr(mkNode(parseState, 1,{
+            mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixConnective = InfixConnective.Implies;
+                rightExpr = $3;
+            })
+        }
+
+valueExpr_8:
+    | orExpr { mkNode(parseState, 1,ValueExpr.AxiomInfixExpr($1)) }
+    | valueExpr_7 { $1 }
+
+orExpr:
+    | valueExpr_7 OR valueExpr_8 
+        {
+            mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixConnective = InfixConnective.Or;
+                rightExpr = $3;
+            })
+        }
+
+valueExpr_7:
+    | andExpr { mkNode(parseState, 1,ValueExpr.AxiomInfixExpr($1)) }
+    | valueExpr_6 { $1 }
+
+andExpr:
+    | valueExpr_6 AND valueExpr_7 
+        {
+           mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixConnective = InfixConnective.And;
+                rightExpr = $3;
+            })
+        }
+
+valueExpr_6:
+    | relExpr { mkNode(parseState, 1,ValueExpr.ValueInfixExpr($1)) }
+    | valueExpr_5 { $1 }
+
+relExpr:
+    | valueExpr_5 relOp valueExpr_6 
+        {
+            mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixOperator = $2;
+                rightExpr = $3;
+            })
+        }
+
+relOp:
+    | EQUALS { InfixOperator.Equals }
+    | NOT_EQUALS { InfixOperator.NotEquals }
+    | GT { InfixOperator.GreaterThan }
+    | LT { InfixOperator.LessThan }
+    | GEQ { InfixOperator.GreaterOrEqual }
+    | LEQ { InfixOperator.LessOrEqual }
+
+valueExpr_5:
+    | addExpr { mkNode(parseState, 1,ValueExpr.ValueInfixExpr($1)) }
+    | valueExpr_4 { $1 }
+
+addExpr:
+    | valueExpr_4 PLUS valueExpr_5 
+        {
+            mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixOperator = InfixOperator.Add;
+                rightExpr = $3;
+            })
+        }
+    | valueExpr_4 MINUS valueExpr_5 
+        {
+            mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixOperator = InfixOperator.Subtract;
+                rightExpr = $3;
+            })
+        }
+
+valueExpr_4:
+    | mulExpr { mkNode(parseState, 1,ValueExpr.ValueInfixExpr($1)) }
+    | valueExpr_3 { $1 }
+
+mulExpr:
+    | valueExpr_3 MULTIPLY valueExpr_4 
+        {
+            mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixOperator = InfixOperator.Multiply;
+                rightExpr = $3;
+            })
+        }
+    | valueExpr_3 DIVIDE valueExpr_4 
+        {
+            mkNode(parseState, 2,{
+                leftExpr = $1;
+                infixOperator = InfixOperator.Divide;
+                rightExpr = $3;
+            })
+        }
+
+valueExpr_3:
+    | axiomPrefixExpr { mkNode(parseState, 1,ValueExpr.AxiomPrefixExpr($1)) }
+    | valuePrefixExpr{ mkNode(parseState, 1,ValueExpr.ValuePrefixExpr($1)) }
+    | valueExpr_2 { $1 }
+
+axiomPrefixExpr:
+    | prefixConnective valueExpr_3 
+        {
+            mkNode(parseState, 1,{
                 prefixConnective = $1;
                 valueExpr = $2;
-            })))
+            })
         }
-    | valuePrefixExpr { $1 }
 
 prefixConnective:
     | NOT { PrefixConnective.Not }
 
 valuePrefixExpr:
-    | prefixOperator valueExpr 
+    | prefixOperator valueExpr_3 
         {
-            mkNode(parseState, 1,ValueExpr.ValuePrefixExpr(mkNode(parseState, 1,{
+            mkNode(parseState, 1,{
                 prefixOperator = $1;
                 valueExpr = $2;
-            })))
+            })
         }
-    | letExpr { $1 }
 
 prefixOperator:
     | ABS { PrefixOperator.Abs }
 
+valueExpr_2:
+    | applicationExpr { mkNode(parseState, 1,ValueExpr.ApplicationExpr($1)) }
+    | valueExpr_1 { $1 }
+
+applicationExpr:
+    | ident LPAREN valueExprList RPAREN 
+        {
+            mkNode(parseState, 1,{
+                name = $1;
+                args = $3;
+            })
+        }
+
+valueExprList:
+    | valueExpr COMMA valueExprList { $1 :: $3 }
+    | valueExpr { [$1] }
+
+valueExpr_1:
+    | bracketedExpr { mkNode(parseState, 1,ValueExpr.BracketedExpr($1)) }
+    | letExpr { mkNode(parseState, 1,ValueExpr.LetExpr($1)) }
+    | ifExpr { mkNode(parseState, 1,ValueExpr.IfExpr($1)) }
+    | valueNameExpr { mkNode(parseState, 1,ValueExpr.ValueName($1)) }
+    | valueLiteralExpr { mkNode(parseState, 1,ValueExpr.ValueLiteral($1)) }
+
+bracketedExpr:
+    | LPAREN valueExpr RPAREN 
+        {
+            mkNode(parseState, 1,{
+                valueExpr = $2;
+            })
+        }
+
 letExpr:
     | LET ident EQUALS valueExpr IN valueExpr END 
         {
-             mkNode(parseState, 1,ValueExpr.LetExpr(mkNode(parseState, 1,{
+            mkNode(parseState, 1,{
                 name = $2;
                 initExpr = $4;
                 scopeExpr = $6;
-            })))
-        
+            })
         }
-    | ifExpr { $1 }
 
 ifExpr:
-    | IF valueExpr THEN valueExpr ELSE valueExpr END
+    | IF valueExpr THEN valueExpr ELSE valueExpr END 
         {
-            mkNode(parseState, 1, ValueExpr.IfExpr(mkNode(parseState, 1,{
+            mkNode(parseState, 1,{
                 condExpr = $2;
                 thenExpr = $4;
                 elseExpr = $6;
-            })))
+            })
         }
+
+valueNameExpr:
+    | ident { $1 }
+
+valueLiteralExpr:
+    | LIT_BOOL { mkNode(parseState, 1, ValueLiteral.Bool($1)) }
+    | LIT_INT { mkNode(parseState, 1, ValueLiteral.Int($1)) }
 
 ident:
     | IDENT { printfn "IDENTNODE %A" $1; $1 }

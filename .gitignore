@@ -17,6 +17,10 @@
 !.paket/paket.bootstrapper.exe
 *.ionide/
 *TestResults
+*outputs/
+
+*.sml
+*._sml
 
 *.fake
 *.vscode
