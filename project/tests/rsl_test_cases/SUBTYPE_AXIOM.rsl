@@ -1,7 +1,8 @@
 scheme SUBTYPE_AXIOM =
     class
       type
-        NonZero = {| x : Int :- x ~= 0 |}
+        NonZero = {| x : A :- x ~= 0 |},
+        A = Int
       value
         inverse : NonZero -> Int
         inverse(x) is 1 / x

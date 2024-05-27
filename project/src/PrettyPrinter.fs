@@ -140,7 +140,8 @@ and internal printValueSignature (valueSignature: AST.Node<AST.ValueSignature>):
    
 and internal printTypeExpr (typeExpr: AST.Node<AST.TypeExpr>): Tree =
     // printfn "TypeExpr" 
-    let typeExprTree = match typeExpr.NodeCategory with
+    let typeExprTree = 
+        match typeExpr.NodeCategory with
         | AST.TypeLiteral typeLiteral -> TreeNode("TypeLiteral", ["", printTypeLiteral typeLiteral])
         | AST.TypeName typeName -> TreeNode("TypeName", ["", printTypeName typeName])
         | AST.SubtypeExpr subTypeExpr -> TreeNode("SubtypeExpr", ["", printSubtypeExpr subTypeExpr])
@@ -150,7 +151,8 @@ and internal printTypeExpr (typeExpr: AST.Node<AST.TypeExpr>): Tree =
 
 and internal printValueExpr (valueExpr: AST.Node<AST.ValueExpr>): Tree =
     // printfn "ValueExpr" 
-    let valueExprTree = match valueExpr.NodeCategory with
+    let valueExprTree = 
+        match valueExpr.NodeCategory with
         | AST.ValueLiteral valueLiteral -> TreeNode("ValueLiteral", ["", printValueLiteral valueLiteral])
         | AST.ApplicationExpr applicationExpr -> TreeNode("ApplicationExpr", ["", printApplicationExpr applicationExpr])
         | AST.BracketedExpr bracketedExpr -> TreeNode("BracketedExpr", ["", printBracketedExpr bracketedExpr])
@@ -176,7 +178,7 @@ and internal printBodyExpr (bodyExpr: AST.Node<AST.BodyExpr>): Tree =
 
 and internal printFunctionDefOperator (functionDefOperator: AST.FunctionDefOperator): Tree =
     match functionDefOperator with
-        | Is -> TreeNode("Is", [])
+    | Is -> TreeNode("Is", [])
 
 and internal printApplicationExpr (applicationExpr: AST.Node<AST.ApplicationExpr>): Tree =
     // printfn "ApplicationExpr" 
@@ -202,8 +204,8 @@ and internal printQuantifiedExpr (quantifiedExpr: AST.Node<AST.QuantifiedExpr>):
 and internal printQuantifiers (quantifier: AST.Quantifiers): Tree =
     // printfn "Quantifiers" 
     match quantifier with
-        | Forall -> TreeNode("Forall", [])
-        | Exists -> TreeNode("Exists", [])
+    | Forall -> TreeNode("Forall", [])
+    | Exists -> TreeNode("Exists", [])
 
 and internal printAxiomInfixExpr (axiomInfixExpr: AST.Node<AST.AxiomInfixExpr>): Tree =
     // printfn "AxiomInfixExpr" 
@@ -215,9 +217,9 @@ and internal printAxiomInfixExpr (axiomInfixExpr: AST.Node<AST.AxiomInfixExpr>):
 
 and internal printInfixConnective (infixConnective: AST.InfixConnective): Tree =
     match infixConnective with
-        | And -> TreeNode("And", [])
-        | Or -> TreeNode("Or", [])
-        | Implies -> TreeNode("Implies", [])
+    | And -> TreeNode("And", [])
+    | Or -> TreeNode("Or", [])
+    | Implies -> TreeNode("Implies", [])
 
 and internal printValueInfixExpr (valueInfixExpr: AST.Node<AST.ValueInfixExpr>): Tree =
     // printfn "ValueInfixExpr" 
@@ -229,16 +231,16 @@ and internal printValueInfixExpr (valueInfixExpr: AST.Node<AST.ValueInfixExpr>):
 
 and internal printInfixOperator (infixOperator: AST.InfixOperator): Tree =
     match infixOperator with
-        | Add -> TreeNode("Add", [])
-        | Subtract -> TreeNode("Subtract", [])
-        | Multiply -> TreeNode("Multiply", [])
-        | Divide -> TreeNode("Divide", [])
-        | Equals -> TreeNode("Equals", [])
-        | NotEquals -> TreeNode("NNotEqualseq", [])
-        | LessThan -> TreeNode("LessThan", [])
-        | LessOrEqual -> TreeNode("LessOrEqual", [])
-        | GreaterThan -> TreeNode("GreaterThan", [])
-        | GreaterOrEqual -> TreeNode("GreaterOrEqual", [])
+    | Add -> TreeNode("Add", [])
+    | Subtract -> TreeNode("Subtract", [])
+    | Multiply -> TreeNode("Multiply", [])
+    | Divide -> TreeNode("Divide", [])
+    | Equals -> TreeNode("Equals", [])
+    | NotEquals -> TreeNode("NNotEqualseq", [])
+    | LessThan -> TreeNode("LessThan", [])
+    | LessOrEqual -> TreeNode("LessOrEqual", [])
+    | GreaterThan -> TreeNode("GreaterThan", [])
+    | GreaterOrEqual -> TreeNode("GreaterOrEqual", [])
 
 and internal printAxiomPrefixExpr (axiomPrefixExpr: AST.Node<AST.AxiomPrefixExpr>): Tree =
     // printfn "AxiomPrefixExpr" 
@@ -249,7 +251,7 @@ and internal printAxiomPrefixExpr (axiomPrefixExpr: AST.Node<AST.AxiomPrefixExpr
 
 and internal printPrefixConnective (prefixConnective: AST.PrefixConnective): Tree =
     match prefixConnective with
-        | Not -> TreeNode("Not", [])
+    | Not -> TreeNode("Not", [])
 
 and internal printValuePrefixExpr (valuePrefixExpr: AST.Node<AST.ValuePrefixExpr>): Tree =
     // printfn "ValuePrefixExpr" 
@@ -260,7 +262,7 @@ and internal printValuePrefixExpr (valuePrefixExpr: AST.Node<AST.ValuePrefixExpr
 
 and internal printPrefixOperator (prefixOperator: AST.PrefixOperator): Tree =
     match prefixOperator with
-        | Abs -> TreeNode("Abs", [])
+    | Abs -> TreeNode("Abs", [])
 
 and internal printLetExpr (letExpr: AST.Node<AST.LetExpr>): Tree =
     // printfn "LetExpr" 
@@ -279,7 +281,8 @@ and internal printIfExpr (ifExpr: AST.Node<AST.IfExpr>): Tree =
    
 and internal printTypeLiteral (typeLiteral: AST.Node<AST.TypeLiteral>): Tree  =
     // printfn "TypeLiteral" 
-    let literalType = match typeLiteral.NodeCategory with
+    let literalType = 
+        match typeLiteral.NodeCategory with
         | Bool -> "Bool"
         | int -> "Int"
     
@@ -313,7 +316,8 @@ and internal printBracketedTypeExpr (bracketedTypeExpr: AST.Node<AST.BracketedTy
 
 and internal printValueLiteral (valueLiteral: AST.Node<AST.ValueLiteral>): Tree =
     // // printfn "ValueLiteral" 
-    let literalValue = match valueLiteral.NodeCategory with
+    let literalValue = 
+        match valueLiteral.NodeCategory with
         | AST.Bool(boolValue) -> boolValue.ToString()
         | AST.Int(intValue) -> intValue.ToString()
     

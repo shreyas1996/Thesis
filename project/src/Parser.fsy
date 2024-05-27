@@ -18,7 +18,6 @@ let pos (parseState: IParseState, inputIdx: int): AST.Position =
 // 'inputIdx' is the index of the symbol to use for computing the position of
 // this expression (it will be used e.g. when reporting error messages).
 let mkNode (parseState: IParseState, inputIdx: int, node: 'C): AST.Node<'C> =
-    printfn "mkNode %A" inputIdx;
     { Pos = pos(parseState, inputIdx) ; NodeCategory = node }
 
 %}
@@ -61,7 +60,6 @@ program:
     | SCHEME schemeDef EOF 
         { 
 
-            printfn "SchemeDeclNode %A" $2;
             mkNode(parseState, 1, {
                 schemeDef = $2;
             })
@@ -71,7 +69,6 @@ program:
 schemeDef:
     | ident EQUALS classExpr 
         {
-            printfn "SchemeDefNode %A %A" $1 $3;
             mkNode(parseState, 1, {
                 name = $1;
                 classExpr = $3;
@@ -82,7 +79,6 @@ schemeDef:
 classExpr:
     | CLASS optDeclStringExpr END 
         { 
-            printfn "ClassExprNode %A" $2;
             mkNode(parseState, 1,{
                 optDecl = $2;
             })
@@ -184,7 +180,6 @@ valueSignatureExpr:
 explicitValueDef:
     | ident COLON typeExpr EQUALS valueExpr
         {
-            printfn "ExplicitValueDefNode %A %A %A" $1 $3 $5;
             mkNode(parseState, 1,{
                 name = $1;
                 typeExpr = $3;
@@ -272,13 +267,12 @@ typeExpr:
     | bracketedTypeExpr { mkNode(parseState, 1, TypeExpr.BracketedTypeExpr($1)) }
 
 typeLiteralExpr:
-    | BOOL { printfn "TypeLiteralBoolNode"; mkNode(parseState, 1, TypeLiteral.Bool) }
-    | INT { printfn "TypeLiteralIntNode"; mkNode(parseState, 1, TypeLiteral.Int) }
+    | BOOL { mkNode(parseState, 1, TypeLiteral.Bool) }
+    | INT { mkNode(parseState, 1, TypeLiteral.Int) }
 
 typeNameExpr:
     | ident 
         { 
-            printfn "TypeNameNode %A" $1;
             mkNode(parseState, 1,{
                 name = $1;
             })
@@ -535,4 +529,4 @@ valueLiteralExpr:
     | LIT_INT { mkNode(parseState, 1, ValueLiteral.Int($1)) }
 
 ident:
-    | IDENT { printfn "IDENTNODE %A" $1; $1 }
+    | IDENT { $1 }

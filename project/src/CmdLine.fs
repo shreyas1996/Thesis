@@ -54,7 +54,8 @@ type ParseResult =
 /// return a non-zero integer usable as exit code.
 let parse (args: string[]): ParseResult =
     let res = CommandLine.Parser.Default.ParseArguments<TokenizerOptions,
-                                                        ParserOptions>(args);
+                                                        ParserOptions,
+                                                        TypecheckerOptions>(args);
 
     match res with
     | :? NotParsed<obj> ->

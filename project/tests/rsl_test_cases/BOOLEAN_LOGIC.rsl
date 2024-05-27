@@ -1,7 +1,17 @@
 scheme BOOLEAN_LOGIC =
     class
+      type
+        A = B,
+        B = C,
+        C = Bool
       value
-        logicCheck : Bool >< Bool -> Bool
+        logicCheck : A >< B -> Bool
         logicCheck(a, b) is (a /\ ~b) \/ (b /\ ~a)
+      axiom
+        [Axiom1] all a: A, b: B :- logicCheck(1, b) = logicCheck(b, a),
+        [Axiom2] all a: A, b: B, c: C :- logicCheck(a, logicCheck(b, c)) = logicCheck(logicCheck(a, b), c),
+        [Axiom3] all a: A :- logicCheck(a, a) = false,
+        [Axiom4] all a: A :- logicCheck(a, false) = a,
+        [Axiom5] all a: A :- logicCheck(a, true) = ~a
     end
   

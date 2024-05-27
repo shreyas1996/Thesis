@@ -46,14 +46,18 @@ let internal typecheck (opt: CmdLine.TypecheckerOptions): int =
         Log.error $"%s{msg}"; 1 // Non-zero exit code
     | Ok(ast) ->
         Log.info "Lexing and parsing succeeded."
-        match (Typechecker.typeCheckAST ast) with
-        | Error(typErrs) ->
-            for posErr in typErrs do
-                Log.error (Util.formatMsg posErr)
-            1 // Non-zero exit code
-        | Ok(tast) ->
-            Log.info "Type checking succeeded."
-            0 // Success!
+        // match (Typechecker.typeCheckAST ast) with
+        // | Error(typErrs) ->
+        //     // for posErr in typErrs do
+        //     //     Log.error (Util.formatMsg posErr)
+        //     Log.error $"%s{typErrs}"; 1 // Non-zero exit code
+        //     1 // Non-zero exit code
+        // | Ok(tast) ->
+        //     Log.info "Type checking succeeded."
+        //     0 // Success!
+        let typecheckerResult = Typechecker.typeCheckAST ast
+        printfn $"Typechecking Result: %A{typecheckerResult}"
+        0 // Success!
 
 
 [<EntryPoint>]
