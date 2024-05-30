@@ -35,12 +35,25 @@ scheme FULL_FEATURE_DEMO =
             x + p
           else
             x - p
+          end,
+        statusVar : Status,
+        checkStatus : Int -> Status
+        checkStatus(x, y) is
+          if x > 0 then
+            Active
+          else
+            if x = 0 then
+              Pending
+            else
+              Inactive
+            end
           end
   
       axiom
-        [PrimeCheck] all x : PrimeNumber :- (x > 1) /\ (~exists d : Int :- (d > 1 /\ d < x) /\ ((x - d * (x / d)) = 0)),
+        [PrimeCheck] all x : PrimeNumber :- (x > 1) /\ (exists d : Int :- (d > 1 /\ d < x) /\ ((x - d * (x / d)) = 0)),
         [ComplexCalculationValid] all x : Int :- all y : Int :- (computeComplex(x, y) ~= 0) => (x ~= 0 /\ y ~= 0),
         [FactorialNonNegative] all n : Int :- (n >= 0) => (factorial(n) >= 1),
-        [LogicEvaluationCorrect] all a : Bool :- all b : Bool :- evaluateLogic(a, b) = ((~a /\ b) \/ (a /\ ~b))
+        [LogicEvaluationCorrect] all a : Bool :- all b : Bool :- evaluateLogic(a, b) = ((~a /\ b) \/ (a /\ ~b)),
+        [StatusCheckAxiom] all x : Int :- (checkStatus(x) = Active) \/ (checkStatus(x) = Inactive) \/ (checkStatus(x) = Pending)
     end
   

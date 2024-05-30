@@ -1,11 +1,12 @@
 scheme SUBTYPE_AXIOM =
     class
       type
-        NonZero = {| x : A :- x ~= 0 |},
-        A = Int
+        NonZero = {| x : A :- x ~= 0 |}
       value
-        inverse : NonZero -> Int
+        inverse : NonZero -> A
         inverse(x) is 1 / x
+      type
+        A = Int
       axiom
         [inverseProperty] (all x : NonZero :- inverse(x) * x = 1)
     end
