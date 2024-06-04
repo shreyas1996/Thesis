@@ -38,7 +38,7 @@ scheme FULL_FEATURE_DEMO =
           end,
         statusVar : Status,
         checkStatus : Int -> Status
-        checkStatus(x, y) is
+        checkStatus(x) is
           if x > 0 then
             Active
           else

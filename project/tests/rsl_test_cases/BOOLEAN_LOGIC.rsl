@@ -3,12 +3,15 @@ scheme BOOLEAN_LOGIC =
       type
         A = B,
         B = C,
-        C = Bool
+        C = Bool,
+        D
       value
+        dVar2: D,
+        dVar: D = dVar2,
         logicCheck : A >< B -> Bool
         logicCheck(a, b) is (a /\ ~b) \/ (b /\ ~a)
       axiom
-        [Axiom1] all a: A, b: B :- logicCheck(1, b) = logicCheck(b, a),
+        [Axiom1] all a: A, b: B :- logicCheck(a, b) = logicCheck(b, a),
         [Axiom2] all a: A, b: B, c: C :- logicCheck(a, logicCheck(b, c)) = logicCheck(logicCheck(a, b), c),
         [Axiom3] all a: A :- logicCheck(a, a) = false,
         [Axiom4] all a: A :- logicCheck(a, false) = a,
