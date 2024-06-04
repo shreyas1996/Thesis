@@ -29,7 +29,7 @@ type Tree =
             this.Format ""
 
 let makeTree (name: string) (node: AST.Node<_>) (subtrees: List<string * Tree>): Tree = 
-    TreeNode($"%s{name} %s{node.Pos.Format}", subtrees)
+    TreeNode($"%s{name} (%s{node.Pos.Format})", subtrees)
 
 
 let rec internal printSchemeDecl (schemeDecl: AST.Node<AST.SchemeDecl>): Tree =

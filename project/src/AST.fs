@@ -13,7 +13,7 @@ type Position =
     }
     with
         member this.Format =
-           $"(%d{this.LineStart}:%d{this.ColStart}-%d{this.LineEnd}:%d{this.ColEnd})"
+           $"%d{this.LineStart}:%d{this.ColStart}-%d{this.LineEnd}:%d{this.ColEnd}"
 
 type Node<'C> =
     {

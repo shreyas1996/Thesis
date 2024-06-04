@@ -71,7 +71,7 @@ let parseFile (fileName: string): Result<AST.Node<AST.SchemeDecl>, string> =
 
 /// Format a message (e.g. an error message) with a position in the given file.
 let formatMsg (pos: AST.Position, msg: string): string =
-    $"%s{pos.FileName}%s{pos.Format}: %s{msg}"
+    $"%s{pos.FileName}:%s{pos.Format}: %s{msg}"
 
 
 /// Format the contents of the given sequence as an easy-to-read string.
