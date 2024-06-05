@@ -197,7 +197,7 @@ and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Res
     | ValueInfixExpr infixExpr ->
         let leftType = resolveAndCheckValueExpr env infixExpr.NodeCategory.leftExpr
         let rightType = resolveAndCheckValueExpr env infixExpr.NodeCategory.rightExpr
-        let infixTypeErrors = [leftType; rightType] |> List.choose (function | Ok _ -> None | Error e -> Some e)
+        let infixTypeErrors = [leftType; rightType] |> List.choose (function | Ok _ -> None | Error e -> Some e) |> List.concat
         match leftType, rightType with
         | Ok resolvedLeftType, Ok resolvedRightType ->
             match infixExpr.NodeCategory.infixOperator with
@@ -215,12 +215,12 @@ and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Res
             | InfixOperator.Divide ->
                 if isSubtype env resolvedLeftType (TLit TInt) && isSubtype env resolvedRightType (TLit TInt) then Ok(TLit TInt)
                 else Error([expr.Pos, sprintf "Type mismatch in arithmetic expression at Pos: %A" expr.Pos.Format])
-        | _ -> Error(List.concat infixTypeErrors)
+        | _ -> Error(infixTypeErrors)
     | ApplicationExpr appExpr ->
         match lookupVariable env appExpr.NodeCategory.name with
         | Some (TFunction (paramTypes, returnType)) ->
             let argTypes = appExpr.NodeCategory.args |> List.map (fun arg -> resolveAndCheckValueExpr env arg)
-            let argTypeErrors = argTypes |> List.choose (function | Ok _ -> None | Error e -> Some e)
+            let argTypeErrors = argTypes |> List.choose (function | Ok _ -> None | Error e -> Some e) |> List.concat
             if List.isEmpty argTypeErrors then
                 let resolvedArgTypes = argTypes |> List.choose (function | Ok t -> Some t | _ -> None)
                 // printfn "Resolved arg types: %A" resolvedArgTypes
@@ -230,26 +230,28 @@ and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Res
                     if List.forall2 (isSubtype env) resolvedArgTypes paramTypes then Ok(returnType)
                     else Error([expr.Pos, sprintf "Parameter Type mismatch in function application at Pos: %A" expr.Pos.Format])
                 else Error([expr.Pos, sprintf "Number of Parameters mismatch in function application at Pos: %A" expr.Pos.Format])
-            else Error(List.concat argTypeErrors)
+            else Error(argTypeErrors)
         | _ -> Error([expr.Pos, sprintf "Function %s not found or unknown at Pos: %A" appExpr.NodeCategory.name appExpr.Pos.Format])
     | IfExpr ifExpr ->
         let condType = resolveAndCheckValueExpr env ifExpr.NodeCategory.condExpr
-        let condTypeErrors = [condType] |> List.choose (function | Ok _ -> None | Error e -> Some e)
+        let condTypeErrors = [condType] |> List.choose (function | Ok _ -> None | Error e -> Some e) |> List.concat
+        let thenType = resolveAndCheckValueExpr env ifExpr.NodeCategory.thenExpr
+        let elseType = resolveAndCheckValueExpr env ifExpr.NodeCategory.elseExpr
+        let thenTypeErrors = [thenType; elseType] |> List.choose (function | Ok _ -> None | Error e -> Some e) |> List.concat
+        let concatErrors = List.concat [condTypeErrors; thenTypeErrors]
         match condType with
         | Ok resolvedCondType ->
-            if (isSubtype env resolvedCondType (TLit TBool)) then
-                let thenType = resolveAndCheckValueExpr env ifExpr.NodeCategory.thenExpr
-                let elseType = resolveAndCheckValueExpr env ifExpr.NodeCategory.elseExpr
-                let thenTypeErrors = [thenType; elseType] |> List.choose (function | Ok _ -> None | Error e -> Some e)
+                let subTypeCondType = isSubtype env resolvedCondType (TLit TBool)
+                let subTypeCondError = if not subTypeCondType then [expr.Pos, sprintf "Condition must be of type Bool at Pos: %A" expr.Pos.Format] else []
                 match thenType, elseType with
                 | Ok resolvedThenType, Ok resolvedElseType -> 
-                    if isSubtype env resolvedThenType resolvedElseType then 
-                        Ok(resolvedThenType)
-                    else Error([expr.Pos, sprintf "then and else expression type mismatch in if expression at Pos: %A" ifExpr.NodeCategory.thenExpr.Pos.Format])
-                | _ -> Error(List.concat thenTypeErrors)
-            // else Error([expr.Pos, sprintf "Condition must be of type Bool at Pos: %A" expr.Pos.Format])
-            else Error([expr.Pos, sprintf "Type mismatch in if expression at Pos: %A" expr.Pos.Format])
-        | _ -> Error(List.concat condTypeErrors)
+                    let subTypeThenType = isSubtype env resolvedThenType resolvedElseType
+                    if subTypeCondType && subTypeThenType then Ok(resolvedThenType)
+                    else
+                        let subTypeThenError = if not subTypeThenType then [ifExpr.NodeCategory.elseExpr.Pos, sprintf "Type mismatch in then/else branches at Pos: %A" ifExpr.NodeCategory.elseExpr.Pos.Format] else []
+                        Error(List.concat [subTypeCondError; subTypeThenError])
+                | _ -> Error(List.concat [subTypeCondError; thenTypeErrors])
+        | _ -> Error(concatErrors)
     | LetExpr letExpr ->
         let initType = resolveAndCheckValueExpr env letExpr.NodeCategory.initExpr
         match initType with
@@ -276,7 +278,7 @@ and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Res
     | AxiomInfixExpr infixExpr ->
         let leftType = resolveAndCheckValueExpr env infixExpr.NodeCategory.leftExpr
         let rightType = resolveAndCheckValueExpr env infixExpr.NodeCategory.rightExpr
-        let axiomInfixTypeErrors = [leftType; rightType] |> List.choose (function | Ok _ -> None | Error e -> Some e)
+        let axiomInfixTypeErrors = [leftType; rightType] |> List.choose (function | Ok _ -> None | Error e -> Some e) |> List.concat
         match leftType, rightType with
         | Ok resolvedLeftType, Ok resolvedRightType ->
             match infixExpr.NodeCategory.infixConnective with
@@ -285,7 +287,7 @@ and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Res
             | InfixConnective.Implies ->
                 if isSubtype env resolvedLeftType (TLit TBool) && isSubtype env resolvedRightType (TLit TBool) then Ok(TLit TBool)
                 else Error([expr.Pos, sprintf "Type mismatch in logical expression at Pos: %A" expr.Pos.Format])
-        | _ -> Error(List.concat axiomInfixTypeErrors)
+        | _ -> Error(axiomInfixTypeErrors)
     | AxiomPrefixExpr prefixExpr ->
         let exprType = resolveAndCheckValueExpr env prefixExpr.NodeCategory.valueExpr
         match exprType with
@@ -307,14 +309,14 @@ and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Res
 let resolveAndCheckFunction env (funcDef: Node<ExplicitFunctionDef>): Result<TTypeExpr, TypeErrors> =
     // Resolve parameter types and add to the function scope
     let paramTypes = funcDef.NodeCategory.args |> List.map (fun arg -> resolveTypeExpr env arg Set.empty)
-    let paramTypeErrors = paramTypes |> List.choose (function | Ok _ -> None | Error e -> Some e)
+    let paramTypeErrors = paramTypes |> List.choose (function | Ok _ -> None | Error e -> Some e) |> List.concat
     if (List.isEmpty paramTypeErrors) then
         let resolvedParamTypes = paramTypes |> List.choose (function | Ok t -> Some t | _ -> None)
         // Resolve return type
         let returnType = resolveTypeExpr env funcDef.NodeCategory.returnTypeExpr Set.empty
         match returnType with
         | Ok resolvedReturnType ->
-            if List.length funcDef.NodeCategory.args = List.length resolvedParamTypes then
+            if List.length funcDef.NodeCategory.bodyExpr.NodeCategory.args = List.length resolvedParamTypes then
                 let newEnv = List.fold2 (fun env paramName paramType -> addVariable env paramName (TType paramType)) env funcDef.NodeCategory.bodyExpr.NodeCategory.args resolvedParamTypes
                 // Resolve and typecheck the body expression in the function scope
                 let bodyType = resolveAndCheckValueExpr newEnv funcDef.NodeCategory.bodyExpr.NodeCategory.valueExpr
@@ -324,7 +326,7 @@ let resolveAndCheckFunction env (funcDef: Node<ExplicitFunctionDef>): Result<TTy
             else
                 Error([funcDef.Pos, sprintf "Parameter type mismatch in function %s at Pos: %A" funcDef.NodeCategory.name funcDef.Pos.Format])
         | Error e -> Error e
-    else Error(List.concat paramTypeErrors)
+    else Error(paramTypeErrors)
 
 let rec resolveAndCheckDecl env (decl: Decl): Result<bool, TypeErrors> =
     let results = 
