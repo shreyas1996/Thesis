@@ -175,7 +175,7 @@ let rec resolveTypeExpr (env: TypeEnvironment) (expr: Node<TypeExpr>) (visited: 
                 if isSubtype env valueType (TLit TBool) then 
                     Ok(TSubtype({ Name = singleTypingExpr.NodeCategory.name; Type = singleTyping }))
                 else 
-                    Error([expr.Pos, sprintf "Type mismatch in subtype expression at Pos: %A" expr.Pos.Format])
+                    Error([subTypeExpr.NodeCategory.valueExpr.Pos, sprintf "Type mismatch in subtype expression at Pos: %A" expr.Pos.Format])
             | Error e -> Error e
         | Error e -> Error e
     | TypeExpr.BracketedTypeExpr t -> resolveTypeExpr env t.NodeCategory.typeExpr visited
@@ -324,7 +324,7 @@ let resolveAndCheckFunction env (funcDef: Node<ExplicitFunctionDef>): Result<TTy
                 | Ok resolvedBodyType -> if not (isSubtype env resolvedBodyType resolvedReturnType) then Error([funcDef.Pos, sprintf "Return type mismatch in function %s at Pos: %A" funcDef.NodeCategory.name funcDef.Pos.Format]) else Ok(resolvedReturnType)
                 | Error e -> Error e
             else
-                Error([funcDef.Pos, sprintf "Parameter type mismatch in function %s at Pos: %A" funcDef.NodeCategory.name funcDef.Pos.Format])
+                Error([funcDef.Pos, sprintf "Number of Parameters mismatch in function Definition %s at Pos: %A" funcDef.NodeCategory.name funcDef.Pos.Format])
         | Error e -> Error e
     else Error(paramTypeErrors)
 
@@ -353,12 +353,12 @@ let rec resolveAndCheckDecl env (decl: Decl): Result<bool, TypeErrors> =
                 | ValueDef.ExplicitValueDef valueDef ->
                     let valueType = resolveAndCheckValueExpr env valueDef.NodeCategory.valueExpr
                     let expectedType = resolveTypeExpr env valueDef.NodeCategory.typeExpr Set.empty
-                    let typeErrors = [valueType; expectedType] |> List.choose (function | Ok _ -> None | Error e -> Some e)
+                    let typeErrors = [valueType; expectedType] |> List.choose (function | Ok _ -> None | Error e -> Some e) |> List.concat
                     match valueType, expectedType with
                     | Ok resolvedValueType, Ok resolvedExpectedType ->
                         if not (isSubtype env resolvedValueType resolvedExpectedType) then Error([valueDef.Pos, sprintf "Type mismatch in value definition %s at Pos: %A" valueDef.NodeCategory.name valueDef.Pos.Format])
                         else Ok resolvedExpectedType
-                    | _ -> Error(List.concat typeErrors)
+                    | _ -> Error(typeErrors)
                 | ValueDef.ValueSignature valSig ->
                     resolveTypeExpr env valSig.NodeCategory.typeExpr Set.empty
             )

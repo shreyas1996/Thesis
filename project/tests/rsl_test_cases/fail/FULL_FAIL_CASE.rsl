@@ -1,0 +1,41 @@
+scheme FULL_FAIL_CASE =
+    class
+        type
+            A = B,
+            B = C,
+            C = A,
+            D = Int,
+            E == e1 | e2,
+            F == f1 | f2,
+            G = {| x: Int :- x + 0 |}
+        value
+            a: A,
+            b: B,
+            c: E,
+            d: F = e1,
+
+            increment: Int -> Int
+                increment(a, b) is a + 1,
+            
+            decrement: Int = increment + 1,
+
+            checkStatus: Bool -> F
+                checkStatus(a) is 
+                if a then f1 else f2 end,
+            
+            checkStatus2: Bool -> E
+                checkStatus2(a) is 
+                if a then
+                    let 
+                        x = 1
+                    in 
+                        e1 + x
+                    end
+                else
+                    let 
+                        x = 2
+                    in
+                        e2 - x
+                    end
+                end
+    end

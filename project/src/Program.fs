@@ -36,6 +36,9 @@ let internal parse (opt: CmdLine.ParserOptions): int =
         // printfn $"%s{prettyAst.ToString()}"
         Log.info $"AST saved to {outputPath}"
         0 // Success!
+let printEnv env =
+    env 
+    |> Map.iter (fun key value -> printfn "\tName: %s, Type: %A" key value)
 
 let internal typecheck (opt: CmdLine.TypecheckerOptions): int =
     Log.setLogLevel opt.LogLevel
@@ -56,7 +59,16 @@ let internal typecheck (opt: CmdLine.TypecheckerOptions): int =
         | Ok(tast) ->
             Log.info "Type checking succeeded."
             // let prettyAst = PrettyPrinter.prettPrint tast
-            printfn $"%A{tast}"
+            // printfn $"%A{tast}"
+            printfn $"\nVariables:"
+            printfn "{"
+            printEnv tast.Variables
+            printfn "}\n"
+            printfn $"Types:"
+            printfn "{"
+            printEnv tast.Types
+            printfn "}\n"
+
             0 // Success!
         // let typecheckerResult = Typechecker.typeCheckAST ast
         // printfn $"Typechecking Result: %A{typecheckerResult}"

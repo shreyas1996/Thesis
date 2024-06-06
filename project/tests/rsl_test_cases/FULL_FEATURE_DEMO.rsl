@@ -2,9 +2,15 @@ scheme FULL_FEATURE_DEMO =
     class
       type
         PrimeNumber = {| x : Int :- all d : Int :- (d > 1 /\ d < x) => (x - d * (x / d)) ~= 0 |},
-        Status == Active | Inactive | Pending
-  
+        Status == Active | Inactive | Pending,
+        A,
+        B = C,
+        C = D,
+        D = Int,
+        E = Bool
       value
+        primeNumber : PrimeNumber,
+        positiveInt: {| x : Int :- x > 0 |} = 5,
         computeComplex : Int >< Int -> Int
         computeComplex(x, y) is
           let

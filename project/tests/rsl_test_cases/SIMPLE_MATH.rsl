@@ -2,14 +2,16 @@ scheme SIMPLE_MATH =
     class
       type
         Number == n1 | n2,
+        Number2 == n3 | n4,
         B = E,
         E = D,
-        D = A,
+        D = C,
         A = Int,
         C
       value
         a1: Int = 1,
-        add : Number >< Number -> Int
+        b1: Number = n1,
+        add : Int >< Int -> Int
         add(x, y) is x + y
       type
         MyInt = Int
