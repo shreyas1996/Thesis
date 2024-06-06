@@ -264,7 +264,8 @@ typeExpr:
     | typeLiteralExpr { mkNode(parseState, 1, TypeExpr.TypeLiteral($1)) }
     | typeNameExpr { mkNode(parseState, 1, TypeExpr.TypeName($1)) }
     | subtypeExpr { mkNode(parseState, 1, TypeExpr.SubtypeExpr($1)) }
-    | bracketedTypeExpr { mkNode(parseState, 1, TypeExpr.BracketedTypeExpr($1)) }
+    | bracketedTypeExpr { $1 }
+    // | bracketedTypeExpr { mkNode(parseState, 1, TypeExpr.BracketedTypeExpr($1)) }
 
 typeLiteralExpr:
     | BOOL { mkNode(parseState, 1, TypeLiteral.Bool) }
@@ -298,12 +299,13 @@ singleTypingExpr:
         }
 
 bracketedTypeExpr:
-    | LPAREN typeExpr RPAREN 
-        {
-            mkNode(parseState, 1,{
-                typeExpr = $2;
-            })
-        }
+    | LPAREN typeExpr RPAREN { $2 }
+    // | LPAREN typeExpr RPAREN 
+    //     {
+    //         mkNode(parseState, 1,{
+    //             typeExpr = $2;
+    //         })
+    //     }
 
 typeExprProduct:
     | typeExpr PRODUCT typeExprProduct { $1 :: $3 }
@@ -487,19 +489,21 @@ valueExprList:
     | valueExpr { [$1] }
 
 valueExpr_1:
-    | bracketedExpr { mkNode(parseState, 1,ValueExpr.BracketedExpr($1)) }
+    // | bracketedExpr { mkNode(parseState, 1,ValueExpr.BracketedExpr($1)) }
+    | bracketedExpr { $1 }
     | letExpr { mkNode(parseState, 1,ValueExpr.LetExpr($1)) }
     | ifExpr { mkNode(parseState, 1,ValueExpr.IfExpr($1)) }
     | valueNameExpr { mkNode(parseState, 1,ValueExpr.ValueName($1)) }
     | valueLiteralExpr { mkNode(parseState, 1,ValueExpr.ValueLiteral($1)) }
 
 bracketedExpr:
-    | LPAREN valueExpr RPAREN 
-        {
-            mkNode(parseState, 1,{
-                valueExpr = $2;
-            })
-        }
+    | LPAREN valueExpr RPAREN { $2 }
+    // | LPAREN valueExpr RPAREN 
+    //     {
+    //         mkNode(parseState, 1,{
+    //             valueExpr = $2;
+    //         })
+    //     }
 
 letExpr:
     | LET ident EQUALS valueExpr IN valueExpr END 

@@ -14,7 +14,7 @@ and TTypeExpr =
     | TLit of TTypeLiteral
     | TName of string
     | TSubtype of TSingleTyping
-    | TBracketed of TTypeExpr
+    // | TBracketed of TTypeExpr
 
 and TTypeLiteral =
     | TInt
@@ -48,10 +48,7 @@ let mergeMaps (map1: Map<string, TypeInfo>) (map2: Map<string, TypeInfo>) =
     map2
     |> Map.fold (fun acc key value -> Map.add key value acc) map1
 
-let rec lookupVariable (env: TypeEnvironment) (name: string) =
-    match Map.tryFind name env.Variables with
-    | Some typ -> Some typ
-    | None -> None
+let rec lookupVariable (env: TypeEnvironment) (name: string) = Map.tryFind name env.Variables
 
 let lookupType (env: TypeEnvironment) (name: string) = Map.tryFind name env.Types
 
@@ -66,7 +63,7 @@ let rec collectTypeExpr (env: TypeEnvironment) (expr: Node<TypeExpr>) =
         let singleTyping = subTypeExpr.NodeCategory.singleTyping
         let singleTypingType = collectTypeExpr env singleTyping.NodeCategory.typeExpr
         TSubtype({ Name = singleTyping.NodeCategory.name; Type = singleTypingType })
-    | TypeExpr.BracketedTypeExpr t -> TBracketed(collectTypeExpr env t.NodeCategory.typeExpr)
+    // | TypeExpr.BracketedTypeExpr t -> TBracketed(collectTypeExpr env t.NodeCategory.typeExpr)
 
 let collectDeclarations (env: TypeEnvironment) (decl: Decl): TypeEnvironment =
     match decl with
@@ -178,7 +175,7 @@ let rec resolveTypeExpr (env: TypeEnvironment) (expr: Node<TypeExpr>) (visited: 
                     Error([subTypeExpr.NodeCategory.valueExpr.Pos, sprintf "Type mismatch in subtype expression at Pos: %A" expr.Pos.Format])
             | Error e -> Error e
         | Error e -> Error e
-    | TypeExpr.BracketedTypeExpr t -> resolveTypeExpr env t.NodeCategory.typeExpr visited
+    // | TypeExpr.BracketedTypeExpr t -> resolveTypeExpr env t.NodeCategory.typeExpr visited
 
 
 and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Result<TTypeExpr, TypeErrors> =
@@ -259,7 +256,7 @@ and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Res
             let newEnv = addVariable env letExpr.NodeCategory.name (TType resolvedInitType)
             resolveAndCheckValueExpr newEnv letExpr.NodeCategory.scopeExpr
         | Error e -> Error e
-    | BracketedExpr brExpr -> resolveAndCheckValueExpr env brExpr.NodeCategory.valueExpr
+    // | BracketedExpr brExpr -> resolveAndCheckValueExpr env brExpr.NodeCategory.valueExpr
     | QuantifiedExpr qExpr ->
         let singleTypingErrors, newEnv =
             qExpr.NodeCategory.singleTypingList

@@ -145,7 +145,7 @@ and internal printTypeExpr (typeExpr: AST.Node<AST.TypeExpr>): Tree =
         | AST.TypeLiteral typeLiteral -> TreeNode("TypeLiteral", ["", printTypeLiteral typeLiteral])
         | AST.TypeName typeName -> TreeNode("TypeName", ["", printTypeName typeName])
         | AST.SubtypeExpr subTypeExpr -> TreeNode("SubtypeExpr", ["", printSubtypeExpr subTypeExpr])
-        | AST.BracketedTypeExpr bracketedExpr -> TreeNode("BracketedTypeExpr", ["", printBracketedTypeExpr bracketedExpr])
+        // | AST.BracketedTypeExpr bracketedExpr -> TreeNode("BracketedTypeExpr", ["", printBracketedTypeExpr bracketedExpr])
     
     makeTree "TypeExprNode" typeExpr [("TypeExpr", typeExprTree)]
 
@@ -155,7 +155,7 @@ and internal printValueExpr (valueExpr: AST.Node<AST.ValueExpr>): Tree =
         match valueExpr.NodeCategory with
         | AST.ValueLiteral valueLiteral -> TreeNode("ValueLiteral", ["", printValueLiteral valueLiteral])
         | AST.ApplicationExpr applicationExpr -> TreeNode("ApplicationExpr", ["", printApplicationExpr applicationExpr])
-        | AST.BracketedExpr bracketedExpr -> TreeNode("BracketedExpr", ["", printBracketedExpr bracketedExpr])
+        // | AST.BracketedExpr bracketedExpr -> TreeNode("BracketedExpr", ["", printBracketedExpr bracketedExpr])
         | AST.QuantifiedExpr quantifiedExpr -> TreeNode("QuantifiedExpr", ["", printQuantifiedExpr quantifiedExpr])
         | AST.AxiomInfixExpr axiomInfixExpr -> TreeNode("AxiomInfixExpr", ["", printAxiomInfixExpr axiomInfixExpr])
         | AST.AxiomPrefixExpr axiomPrefixExpr -> TreeNode("AxiomPrefixExpr", ["", printAxiomPrefixExpr axiomPrefixExpr])
@@ -186,10 +186,10 @@ and internal printApplicationExpr (applicationExpr: AST.Node<AST.ApplicationExpr
         ($"arg %d{i + 1}", printValueExpr arg)) (List.indexed applicationExpr.NodeCategory.args))
     makeTree "ApplicationExprNode" applicationExpr [("Name", TreeNode(applicationExpr.NodeCategory.name, [])); ("Args", args)]
 
-and internal printBracketedExpr (bracketedExpr: AST.Node<AST.BracketedExpr>): Tree =
-    // printfn "BracketedExpr" 
-    let valueExprTree = printValueExpr bracketedExpr.NodeCategory.valueExpr
-    makeTree "BracketedExprNode" bracketedExpr [("ValueExpr", valueExprTree)]
+// and internal printBracketedExpr (bracketedExpr: AST.Node<AST.BracketedExpr>): Tree =
+//     // printfn "BracketedExpr" 
+//     let valueExprTree = printValueExpr bracketedExpr.NodeCategory.valueExpr
+//     makeTree "BracketedExprNode" bracketedExpr [("ValueExpr", valueExprTree)]
 
 and internal printQuantifiedExpr (quantifiedExpr: AST.Node<AST.QuantifiedExpr>): Tree =
     // printfn "QuantifiedExpr" 
@@ -308,11 +308,11 @@ and internal printSingleTyping (singleTyping: AST.Node<AST.SingleTyping>): Tree 
 
     makeTree "SingleTypingNode" singleTyping [("Name", name); ("TypeExpr", typeExpr)]
     
-and internal printBracketedTypeExpr (bracketedTypeExpr: AST.Node<AST.BracketedTypeExpr>): Tree =
-    // printfn "BracketedTypeExpr" 
-    let typeExpr = printTypeExpr bracketedTypeExpr.NodeCategory.typeExpr
+// and internal printBracketedTypeExpr (bracketedTypeExpr: AST.Node<AST.BracketedTypeExpr>): Tree =
+//     // printfn "BracketedTypeExpr" 
+//     let typeExpr = printTypeExpr bracketedTypeExpr.NodeCategory.typeExpr
 
-    makeTree "BracketedTypeExprNode" bracketedTypeExpr [("TypeExpr", typeExpr)]
+//     makeTree "BracketedTypeExprNode" bracketedTypeExpr [("TypeExpr", typeExpr)]
 
 and internal printValueLiteral (valueLiteral: AST.Node<AST.ValueLiteral>): Tree =
     // // printfn "ValueLiteral" 
