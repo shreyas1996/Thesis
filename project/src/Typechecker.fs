@@ -25,34 +25,34 @@ and TSingleTyping = {
     Type: TTypeExpr
 }
 
-type VarTypeInfo =
+type ValueInfo =
     | TFunction of TTypeExpr list * TTypeExpr
     | TType of TTypeExpr
 
-type TypeEnvironment = {
-    Variables: Map<string, VarTypeInfo>
+type Environment = {
+    Values: Map<string, ValueInfo>
     Types: Map<string, TypeInfo>
 }
 
 let emptyEnvironment = {
-    Variables = Map.empty
+    Values = Map.empty
     Types = Map.empty
 }
 
 let memo = Dictionary<string, TypeInfo>()
 
-let addVariable (env: TypeEnvironment) (name: string) (typ: VarTypeInfo) = { env with Variables = Map.add name typ env.Variables }
-let addType (env: TypeEnvironment) (name: string) (typ: TypeInfo) = { env with Types = Map.add name typ env.Types }
+let addVariable (env: Environment) (name: string) (typ: ValueInfo) = { env with Values = Map.add name typ env.Values }
+let addType (env: Environment) (name: string) (typ: TypeInfo) = { env with Types = Map.add name typ env.Types }
 
 let mergeMaps (map1: Map<string, TypeInfo>) (map2: Map<string, TypeInfo>) =
     map2
     |> Map.fold (fun acc key value -> Map.add key value acc) map1
 
-let rec lookupVariable (env: TypeEnvironment) (name: string) = Map.tryFind name env.Variables
+let rec lookupVariable (env: Environment) (name: string) = Map.tryFind name env.Values
 
-let lookupType (env: TypeEnvironment) (name: string) = Map.tryFind name env.Types
+let lookupType (env: Environment) (name: string) = Map.tryFind name env.Types
 
-let rec collectTypeExpr (env: TypeEnvironment) (expr: Node<TypeExpr>) =
+let rec collectTypeExpr (env: Environment) (expr: Node<TypeExpr>) =
     match expr.NodeCategory with
     | TypeExpr.TypeLiteral t -> 
         match t.NodeCategory with
@@ -65,37 +65,86 @@ let rec collectTypeExpr (env: TypeEnvironment) (expr: Node<TypeExpr>) =
         TSubtype({ Name = singleTyping.NodeCategory.name; Type = singleTypingType })
     // | TypeExpr.BracketedTypeExpr t -> TBracketed(collectTypeExpr env t.NodeCategory.typeExpr)
 
-let collectDeclarations (env: TypeEnvironment) (decl: Decl): TypeEnvironment =
+let collectDeclarations env (decl: Decl): Result<Environment, TypeErrors> =
     match decl with
     | Decl.TypeDecl typeDecl ->
-        typeDecl.NodeCategory.typeDefList |> List.fold (fun env typeDef ->
-            match typeDef with
-            | TypeDef.SortDef sortDef -> addType env sortDef.NodeCategory.name (TSortDef sortDef.NodeCategory.name)
-            | TypeDef.AbbrevDef abbrevDef -> 
-                let typ = collectTypeExpr env abbrevDef.NodeCategory.typeExpr
-                addType env abbrevDef.NodeCategory.name (TAbbrevDef typ)
-            | TypeDef.VariantDef variantDef -> 
-                let newEnv = addType env variantDef.NodeCategory.name (TVariantDef variantDef.NodeCategory.choice)
-                variantDef.NodeCategory.choice |> List.fold (fun env choice -> addVariable env choice (TType (TName variantDef.NodeCategory.name))) newEnv
+        typeDecl.NodeCategory.typeDefList |> List.fold (fun envResult typeDef ->
+            match envResult with
+            | Error e -> Error e
+            | Ok env ->
+                match typeDef with
+                | TypeDef.SortDef sortDef ->
+                    let typeExists = lookupType env sortDef.NodeCategory.name
+                    match typeExists with
+                    | Some _ -> Error([sortDef.Pos, sprintf "Type already exists: %s" sortDef.NodeCategory.name])
+                    | None -> 
+                        let newEnv = addType env sortDef.NodeCategory.name (TSortDef sortDef.NodeCategory.name)
+                        Ok newEnv
+                | TypeDef.AbbrevDef abbrevDef ->
+                    let typeExists = lookupType env abbrevDef.NodeCategory.name
+                    match typeExists with
+                    | Some _ -> Error([abbrevDef.Pos, sprintf "Type already exists: %s" abbrevDef.NodeCategory.name])
+                    | None -> 
+                        let typ = collectTypeExpr env abbrevDef.NodeCategory.typeExpr
+                        let newEnv = addType env abbrevDef.NodeCategory.name (TAbbrevDef typ)
+                        Ok newEnv 
+                | TypeDef.VariantDef variantDef ->
+                    let typeExists = lookupType env variantDef.NodeCategory.name
+                    match typeExists with
+                    | Some _ -> Error([variantDef.Pos, sprintf "Type already exists: %s" variantDef.NodeCategory.name])
+                    | None ->
+                        let printAndReturn x = printfn "%A" x; x
+                        let choiceTypes = List.choose(fun choiceName -> lookupVariable env choiceName) variantDef.NodeCategory.choice |> printAndReturn
+                        if(List.isEmpty choiceTypes) then
+                            let newEnv = addType env variantDef.NodeCategory.name (TVariantDef variantDef.NodeCategory.choice)
+                            let finalEnv = variantDef.NodeCategory.choice |> List.fold (fun env choice -> addVariable env choice (TType (TName variantDef.NodeCategory.name))) newEnv
+                            Ok finalEnv
+                        else
+                            Error([variantDef.Pos, sprintf "Variant choice type(s) already exist: %s" variantDef.NodeCategory.name])
         ) env
     | Decl.ValueDecl valueDecl ->
-        valueDecl.NodeCategory.valueDefList |> List.fold (fun env valueDef ->
-            match valueDef with
-            | ValueDef.ValueSignature valueSig -> 
-                let typ = collectTypeExpr env valueSig.NodeCategory.typeExpr
-                addVariable env valueSig.NodeCategory.name (TType typ)
-            | ValueDef.ExplicitValueDef explicitValueDef -> 
-                let typ = collectTypeExpr env explicitValueDef.NodeCategory.typeExpr
-                addVariable env explicitValueDef.NodeCategory.name (TType typ)
-            | ValueDef.ExplicitFunctionDef funcDef ->
-                let paramTypes = funcDef.NodeCategory.args |> List.map (fun arg -> collectTypeExpr env arg)
-                let returnType = collectTypeExpr env funcDef.NodeCategory.returnTypeExpr
-                addVariable env funcDef.NodeCategory.name (TFunction (paramTypes, returnType))
+        valueDecl.NodeCategory.valueDefList |> List.fold (fun envResult valueDef ->
+            match envResult with
+            | Error e -> Error e
+            | Ok env ->
+                match valueDef with
+                | ValueDef.ValueSignature valueSig -> 
+                    let varExists = lookupVariable env valueSig.NodeCategory.name
+                    match varExists with
+                    | Some _ -> Error([valueSig.Pos, sprintf "Variable already exists: %s" valueSig.NodeCategory.name])
+                    | None ->
+                        let typ = collectTypeExpr env valueSig.NodeCategory.typeExpr
+                        let newEnv = addVariable env valueSig.NodeCategory.name (TType typ)
+                        Ok newEnv
+                | ValueDef.ExplicitValueDef explicitValueDef ->
+                    let varExists = lookupVariable env explicitValueDef.NodeCategory.name
+                    match varExists with
+                    | Some _ -> Error([explicitValueDef.Pos, sprintf "Variable already exists: %s" explicitValueDef.NodeCategory.name])
+                    | None -> 
+                        let typ = collectTypeExpr env explicitValueDef.NodeCategory.typeExpr
+                        let newEnv = addVariable env explicitValueDef.NodeCategory.name (TType typ)
+                        Ok newEnv
+                | ValueDef.ExplicitFunctionDef funcDef ->
+                    let varExists = lookupVariable env funcDef.NodeCategory.name
+                    match varExists with
+                    | Some _ -> Error([funcDef.Pos, sprintf "Variable already exists: %s" funcDef.NodeCategory.name])
+                    | None -> 
+                        let paramTypes = funcDef.NodeCategory.args |> List.map (fun arg -> collectTypeExpr env arg)
+                        let returnType = collectTypeExpr env funcDef.NodeCategory.returnTypeExpr
+                        let newEnv = addVariable env funcDef.NodeCategory.name (TFunction (paramTypes, returnType))
+                        Ok newEnv
         ) env
     | Decl.AxiomDecl _ -> env
 
-let collectSchemeDeclarations (env: TypeEnvironment) (scheme: Node<SchemeDecl>): TypeEnvironment =
-    scheme.NodeCategory.schemeDef.NodeCategory.classExpr.NodeCategory.optDecl |> List.fold collectDeclarations env
+let collectSchemeDeclarations env (scheme: Node<SchemeDecl>): Result<Environment, TypeErrors> =
+    let collectOptDeclResults = scheme.NodeCategory.schemeDef.NodeCategory.classExpr.NodeCategory.optDecl |> List.fold collectDeclarations env
+    match collectOptDeclResults with
+    | Error e -> Error e
+    | Ok newEnv ->
+        let intersection = Map.keys newEnv.Types |> Seq.toList |> List.filter (fun key -> Map.containsKey key newEnv.Values)
+        match intersection with
+        | [] -> Ok newEnv
+        | name :: _ -> Error ([scheme.NodeCategory.schemeDef.NodeCategory.classExpr.Pos, sprintf "Type %s is also declared as a variable" name])
 
 let rec isSubtype env (subType: TTypeExpr) (superType: TTypeExpr): bool =
     match (subType, superType) with
@@ -128,10 +177,10 @@ let rec isSubtype env (subType: TTypeExpr) (superType: TTypeExpr): bool =
         | _ -> false
     | _ -> false
 
-let checkRelationalExprTypes (env: TypeEnvironment) (leftType: TTypeExpr) (rightType: TTypeExpr) =
+let checkRelationalExprTypes (env: Environment) (leftType: TTypeExpr) (rightType: TTypeExpr) =
     isSubtype env leftType rightType || isSubtype env rightType leftType
 
-let rec resolveTypeExpr (env: TypeEnvironment) (expr: Node<TypeExpr>) (visited: Set<string>): Result<TTypeExpr, TypeErrors> =
+let rec resolveTypeExpr (env: Environment) (expr: Node<TypeExpr>) (visited: Set<string>): Result<TTypeExpr, TypeErrors> =
     let rec loop typ visited =
         match typ with
         | TName name when Set.contains name visited -> Error([expr.Pos, sprintf "Cyclic type definition detected: %s" name])
@@ -178,7 +227,7 @@ let rec resolveTypeExpr (env: TypeEnvironment) (expr: Node<TypeExpr>) (visited: 
     // | TypeExpr.BracketedTypeExpr t -> resolveTypeExpr env t.NodeCategory.typeExpr visited
 
 
-and resolveAndCheckValueExpr (env: TypeEnvironment) (expr: Node<ValueExpr>): Result<TTypeExpr, TypeErrors> =
+and resolveAndCheckValueExpr (env: Environment) (expr: Node<ValueExpr>): Result<TTypeExpr, TypeErrors> =
     match expr.NodeCategory with
     | ValueLiteral litNode ->
         match litNode.NodeCategory with
@@ -380,11 +429,14 @@ let resolveAndCheckScheme env (scheme: Node<SchemeDecl>) =
     | [] -> Ok true
     | _ -> Error (List.concat errors)
 
-let typeCheckAST (program: Node<SchemeDecl>): Result<TypeEnvironment, TypeErrors> =
+let typeCheckAST (program: Node<SchemeDecl>): Result<Environment, TypeErrors> =
     let initialEnv = emptyEnvironment
-    let env = collectSchemeDeclarations initialEnv program
-    let result = resolveAndCheckScheme env program
-    // printfn $"Typechecking Result: %A{env}"
-    match result with
-    | Ok _ -> Ok env
+    let collectResult = collectSchemeDeclarations (Ok initialEnv) program
+    match collectResult with
     | Error e -> Error e
+    | Ok env ->
+        let result = resolveAndCheckScheme env program
+        // printfn $"Typechecking Result: %A{env}"
+        match result with
+        | Ok _ -> Ok env
+        | Error e -> Error e

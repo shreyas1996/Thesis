@@ -62,7 +62,7 @@ let internal typecheck (opt: CmdLine.TypecheckerOptions): int =
             // printfn $"%A{tast}"
             printfn $"\nVariables:"
             printfn "{"
-            printEnv tast.Variables
+            printEnv tast.Values
             printfn "}\n"
             printfn $"Types:"
             printfn "{"
