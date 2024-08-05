@@ -6,10 +6,16 @@ scheme FULL_FAIL_CASE =
             C = A,
             D = Int,
             E == e1 | e2,
+            H == e1 | e1,
             F == f1 | f2,
-            G = {| x: Int :- x + 0 |}
+            G = {| x: Int :- x > 0 |},
+            H = {| x: Int :- x < 0 |}
         value
-            a: A,
+            a: Int >< Int -> Int
+            a(x, y) is x / y,
+            a: Bool,
+            A: Int,
+            e1: E,
             b: B,
             c: E,
             d: F = e1,

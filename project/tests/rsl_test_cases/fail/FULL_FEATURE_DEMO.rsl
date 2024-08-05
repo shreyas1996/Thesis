@@ -1,0 +1,64 @@
+scheme FULL_FEATURE_DEMO_NEGATIVE =
+  class
+    type
+      PrimeNumber = {| x : Int :- all d : Int :- (d > 1 /\ d < x) => (x - d * (x / d)) ~= 0 |},
+      Status == Active | Inactive | Pending,
+      A,
+      B = C,
+      C = D,
+      D = Int,
+      E = Bool
+    value
+      primeNumber : PrimeNumber,
+      positiveInt: {| x : Int :- x > 0 |} = 5,
+      computeComplex : Int >< Int -> Bool
+      computeComplex(x, y) is
+        let
+          intermediateResult = (x * y - x / y) + 3 * (y - (y / x) * x)
+        in
+          if x > y then
+            intermediateResult + x
+          else
+            intermediateResult - y
+          end
+        end,
+
+      factorial : Int -> Bool
+      factorial(n) is
+        if n = 0 then
+          1
+        else
+          n * factorial(n - 1)
+        end,
+
+      evaluateLogic : Bool >< Bool -> Int
+      evaluateLogic(a, b) is
+        ((~a /\ b) \/ (a /\ ~b)) /\ (a \/ ~(a /\ b)),
+
+      combineValues : Int >< PrimeNumber -> PrimeNumber
+      combineValues(x, p) is
+        if p > x then
+          x + p
+        else
+          x - p
+        end,
+      statusVar : Status,
+      checkStatus : Int -> Int
+      checkStatus(x) is
+        if x > 0 then
+          Active
+        else
+          if x = 0 then
+            Pending
+          else
+            Inactive
+          end
+        end
+
+    axiom
+      [PrimeCheck] all x : PrimeNumber :- (x > 1) /\ (exists d : Int :- (d > 1 /\ d < x) /\ ((x - d * (x / d)) = 0)),
+      [ComplexCalculationValid] all x : Int :- all y : Int :- (computeComplex(x, y) ~= 0) => (x ~= 0 /\ y ~= 0),
+      [FactorialNonNegative] all n : Int :- (n >= 0) => (factorial(n) >= 1),
+      [LogicEvaluationCorrect] all a : Bool :- all b : Bool :- evaluateLogic(a, b) = ((~a /\ b) \/ (a /\ ~b)),
+      [StatusCheckAxiom] all x : Int :- (checkStatus(x) = Active) \/ (checkStatus(x) = Inactive) \/ (checkStatus(x) = Pending)
+  end

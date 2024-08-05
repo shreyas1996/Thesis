@@ -1,0 +1,6 @@
+scheme Example = 
+    class
+        value 
+            add Int >< Int -> Int
+            add(x, y) is x + y
+    end

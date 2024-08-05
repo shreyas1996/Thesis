@@ -1,0 +1,6 @@
+scheme PURE_LOGIC_NEGATIVE =
+    class
+      value
+        logicGate : Bool >< Bool -> Int
+        logicGate(a, b) is ~(a \/ b) /\ (a \/ ~b)
+    end

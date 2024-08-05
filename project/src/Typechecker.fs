@@ -93,14 +93,18 @@ let collectDeclarations env (decl: Decl): Result<Environment, TypeErrors> =
                     match typeExists with
                     | Some _ -> Error([variantDef.Pos, sprintf "Type already exists: %s" variantDef.NodeCategory.name])
                     | None ->
-                        let printAndReturn x = printfn "%A" x; x
-                        let choiceTypes = List.choose(fun choiceName -> lookupVariable env choiceName) variantDef.NodeCategory.choice |> printAndReturn
-                        if(List.isEmpty choiceTypes) then
-                            let newEnv = addType env variantDef.NodeCategory.name (TVariantDef variantDef.NodeCategory.choice)
-                            let finalEnv = variantDef.NodeCategory.choice |> List.fold (fun env choice -> addVariable env choice (TType (TName variantDef.NodeCategory.name))) newEnv
-                            Ok finalEnv
+                        let variantChoiceSet = Set.ofList variantDef.NodeCategory.choice
+                        if(Set.count variantChoiceSet <> List.length variantDef.NodeCategory.choice) then
+                            Error([variantDef.Pos, sprintf "Duplicate variant choices in %s" variantDef.NodeCategory.name])
                         else
-                            Error([variantDef.Pos, sprintf "Variant choice type(s) already exist: %s" variantDef.NodeCategory.name])
+                            let printAndReturn x = printfn "%A" x; x
+                            let choiceTypes = List.choose(fun choiceName -> lookupVariable env choiceName) variantDef.NodeCategory.choice |> printAndReturn
+                            if(List.isEmpty choiceTypes) then
+                                let newEnv = addType env variantDef.NodeCategory.name (TVariantDef variantDef.NodeCategory.choice)
+                                let finalEnv = variantDef.NodeCategory.choice |> List.fold (fun env choice -> addVariable env choice (TType (TName variantDef.NodeCategory.name))) newEnv
+                                Ok finalEnv
+                            else
+                                Error([variantDef.Pos, sprintf "Variant choice type(s) already exist: %s" variantDef.NodeCategory.name])
         ) env
     | Decl.ValueDecl valueDecl ->
         valueDecl.NodeCategory.valueDefList |> List.fold (fun envResult valueDef ->

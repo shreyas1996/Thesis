@@ -1,0 +1,19 @@
+scheme CONDITIONAL_LET_NEGATIVE =
+  class
+    value
+      checkAndCompute : Int -> Int
+      checkAndCompute(x) is
+        if x + 0 then
+          let
+            y = x * 2
+          in
+            y + true
+          end
+        else
+          let
+            y = x / 2
+          in
+            true
+          end
+        end
+  end
