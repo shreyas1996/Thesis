@@ -1,7 +1,0 @@
-scheme LONG_INFIX =
-    class
-      value
-        complexCalc : Int >< Int -> Int
-        complexCalc(x, y) is ((x + 2) * (y - 3)) + 5 / (x + y)
-    end
-  

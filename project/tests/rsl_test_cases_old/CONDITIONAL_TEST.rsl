@@ -1,6 +1,0 @@
-scheme CONDITIONAL_TEST =
-    class
-      value
-        check : Int -> Bool
-        check(x) is if x > 10 then true else false end
-    end

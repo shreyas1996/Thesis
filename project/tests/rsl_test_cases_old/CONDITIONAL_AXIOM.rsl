@@ -1,9 +1,0 @@
-scheme CONDITIONAL_AXIOM =
-    class
-      value
-        evaluate : Int -> Bool
-        evaluate(x) is if x > 0 /\ x < 100 then true else false
-      axiom
-        [validRange] all x : Int :- (x > 0 /\ x < 100) ⇒ (evaluate(x) = true)
-    end
-  

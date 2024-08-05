@@ -1,6 +1,0 @@
-scheme FULL_LOGICAL =
-    class
-      axiom
-        [logicTest] (all x : Bool :- x \/ ~x) /\ (~(true /\ false))
-    end
-  

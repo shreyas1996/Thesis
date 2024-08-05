@@ -1,8 +1,0 @@
-scheme SIMPLE_CALC =
-    class
-      value
-        number : Int = 10,
-        increment : Int -> Int
-        increment(n) is n + 1
-    end
-  

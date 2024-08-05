@@ -1,7 +1,0 @@
-scheme INFIX_COMPLEX =
-    class
-      value
-        calculate : Int >< Int -> Int
-        calculate(x, y) is (x + y) * (x - y)
-    end
-  

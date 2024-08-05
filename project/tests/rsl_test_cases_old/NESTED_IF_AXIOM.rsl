@@ -1,9 +1,0 @@
-scheme NESTED_IF_AXIOM =
-    class
-      value
-        categorize : Int -> String
-        categorize(x) is if x > 0 then "Positive" else if x == 0 then "Zero" else "Negative"
-      axiom
-        [basicCheck] all x : Int :- (x ~= 0 ⇒ categorize(x) ~= "Zero")
-    end
-  
