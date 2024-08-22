@@ -7,7 +7,10 @@ scheme FULL_FEATURE_DEMO_NEGATIVE =
       B = C,
       C = D,
       D = Int,
-      E = Bool
+      E = Bool,
+      G = H,
+      H = I,
+      I = G
     value
       primeNumber : PrimeNumber,
       positiveInt: {| x : Int :- x > 0 |} = 5,
@@ -37,7 +40,7 @@ scheme FULL_FEATURE_DEMO_NEGATIVE =
 
       combineValues : Int >< PrimeNumber -> PrimeNumber
       combineValues(x, p) is
-        if p > x then
+        if p + x then
           x + p
         else
           x - p

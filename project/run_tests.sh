@@ -23,6 +23,6 @@ for file in "$dir"/*.rsl; do
     # Check if file exists
     if [ -f "$file" ]; then
         # Execute script with file as argument
-        bash "$script" "parse" "$file" "-v" "-l"
+        bash "$script" "typecheck" "$file" "-v" "-l"
     fi
 done

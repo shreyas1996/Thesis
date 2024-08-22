@@ -179,7 +179,7 @@ let rec isSubtype env (subType: TTypeExpr) (superType: TTypeExpr): bool =
         match lookupType env subTypeName with
         | Some (TAbbrevDef subType) -> isSubtype env subType superType.Type
         | _ -> false
-    | _ -> false
+    // | _ -> false
 
 let checkRelationalExprTypes (env: Environment) (leftType: TTypeExpr) (rightType: TTypeExpr) =
     isSubtype env leftType rightType || isSubtype env rightType leftType

@@ -73,7 +73,6 @@ type TypeExpr =
     | TypeLiteral of Node<TypeLiteral>
     | TypeName of Node<TypeName>
     | SubtypeExpr of Node<SubtypeExpr>
-    // | BracketedTypeExpr of Node<BracketedTypeExpr>
 
 and SubtypeExpr =
     {
@@ -99,7 +98,6 @@ and ValueExpr =
     | ValueLiteral of Node<ValueLiteral>
     | ValueName of string
     | ApplicationExpr of Node<ApplicationExpr>
-    // | BracketedExpr of Node<BracketedExpr>
     | QuantifiedExpr of Node<QuantifiedExpr>
     | AxiomInfixExpr of Node<AxiomInfixExpr>
     | ValueInfixExpr of Node<ValueInfixExpr>

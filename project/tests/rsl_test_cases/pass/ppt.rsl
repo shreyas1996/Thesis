@@ -1,0 +1,31 @@
+scheme Example =
+    class
+        type
+            A,
+            B == b1 | b2 | b3,
+            C = Int
+        value
+            x : A,
+            y : B = b2,
+            f : C >< C -> Int
+            f(a, b) is a + b
+        value
+            a: C = f(1, 2),
+            b: Bool = true,
+            c: {| l: C :- l > 0 |} = 10,
+            e: Int -> Bool
+            e(k) is
+                if k > 0 then
+                    let
+                        d = k * 2
+                        in
+                        b
+                    end
+                else
+                    let
+                        d = abs(k)
+                        in
+                        ~b
+                    end
+            end
+    end

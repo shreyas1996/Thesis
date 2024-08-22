@@ -60,7 +60,7 @@ let internal typecheck (opt: CmdLine.TypecheckerOptions): int =
             Log.info "Type checking succeeded."
             // let prettyAst = PrettyPrinter.prettPrint tast
             // printfn $"%A{tast}"
-            printfn $"\nVariables:"
+            printfn $"\n Values:"
             printfn "{"
             printEnv tast.Values
             printfn "}\n"
